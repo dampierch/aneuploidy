@@ -51,3 +51,28 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 2. We start with our subset of five normal tissue samples that are unique and have a unique tumor sample partner. There are 510 of these unique pairs in total.
 3. Our [download script](download.slurm) does not seem to work on the compute nodes, so we run it on a login node. We expect the download to be about 240 GB (average file size of [31 210 000 000 000 bytes / 1303 files] = 24 GB * 10 files). The actual file size is 218 GB for 10 BAM files.
 4. We call variants with...
+
+
+# Scratch space
+
+## R code for GDC TCGA API
+        # if(json$data$pagination$count == 0) {
+        #     url <- getGDCquery(project = proj,
+        #                        data.category = data.category,
+        #                        data.type = data.type,
+        #                        legacy = legacy,
+        #                        workflow.type = NA,
+        #                        platform = NA,
+        #                        file.type = file.type,
+        #                        experimental.strategy = experimental.strategy,
+        #                        files.access = access,
+        #                        sample.type = sample.type)
+        #     json  <- tryCatch(
+        #         getURL(url,fromJSON,timeout(600),simplifyDataFrame = TRUE),
+        #         error = function(e) {
+        #             message(paste("Error: ", e, sep = " "))
+        #             message("We will retry to access GDC!")
+        #             fromJSON(content(getURL(url,GET,timeout(600)), as = "text", encoding = "UTF-8"), simplifyDataFrame = TRUE)
+        #         }
+        #     )
+        # }
