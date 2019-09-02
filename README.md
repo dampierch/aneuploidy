@@ -55,6 +55,19 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 
 # Scratch space
 
+## Variant calling pipelines
+* [Kumaran, 2019](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-2928-9) finds BWA or Novoalign with DeepVariant or SAMTools give best SNV results (GIAB gold standard)
+* [Hwang, 2015](https://www.nature.com/articles/srep17875?report=reader) finds BWA-MEM with SAMTools gives best SNV results; also Samtools tends to add reference alleles and thereby overcall heterozygous SNVs (GIAB gold standard)
+* [Pirooznia, 2014](https://humgenomics.biomedcentral.com/articles/10.1186/1479-7364-8-14), using BWA with realignment/recalibration, finds GATK-UG outperforms SAMTools mpileup and GATK-HC better than GATK-UG (Sanger gold standard)... may be due to GATK outperformance for indels
+* [Liu, 2013](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0075619), using BWA, finds GATK outperforms SAMTools (Sanger gold standard)... may be due to GATK outperformance for indels
+
+## Genome in a Bottle (NIST)
+* [Zook, 2014](https://www.nature.com/articles/nbt.2835) introduces GIAB
+
+## Exome capture kits
+* [Wang, 2018](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0204912) reports that exome capture kits bias results for limited number of genes; [Github](https://github.com/TheJacksonLaboratory/GDCSlicing) may have code to extract exome capture kit from metadata
+
+
 ## R code for GDC TCGA API
         # if(json$data$pagination$count == 0) {
         #     url <- getGDCquery(project = proj,
@@ -76,3 +89,78 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
         #         }
         #     )
         # }
+
+https://api.gdc.cancer.gov/<endpoint>
+https://api.gdc.cancer.gov/legacy/<endpoint>
+
+https://api.gdc.cancer.gov/annotations
+https://api.gdc.cancer.gov/files
+https://api.gdc.cancer.gov/projects
+
+# curl
+curl https://api.gdc.cancer.gov/annotations/9977f28d-e585-45bc-86a4-1489fd7d2810?pretty=true
+curl 'https://api.gdc.cancer.gov/projects/TARGET-NBL?expand=summary,summary.experimental_strategies,summary.data_categories&pretty=true'
+
+# python
+import requests
+import json
+
+endpt = 'https://api.gdc.cancer.gov/projects/'
+uuid = '00b7ee04-b97b-49ee-b27b-13f6fb981fec'
+response = requests.get(endpt + uuid)
+print(json.dumps(response.json(), indent=2))
+
+
+filters = null
+format = JSON
+pretty = false
+fields = null
+expand = null
+size = 10
+from = 0
+sort = null
+facets = null
+
+
+Case Fields
+files.analysis.metadata.read_groups.target_capture_kit_name
+
+File Fields
+analysis.metadata.read_groups.target_capture_kit_name
+
+# Request parameter example
+endpt = 'https://api.gdc.cancer.gov/cases/'
+filt = {
+  "op": "=",
+  "content": {
+    "field": "cases.demographic.gender",
+    "value": ["male"]
+  }
+}
+params = {'filters': json.dumps(filt), 'fields':'case_id', 'expand': 'analysis.metadata.read_groups.target_capture_kit_name, files.analysis.metadata.read_groups.target_capture_kit_name'}
+response = requests.get(endpt, params = params)
+print(json.dumps(response.json(), indent=2))
+
+# Request specific fields for specific files
+endpt = 'https://api.gdc.cancer.gov/files/'
+filt = {
+  "op": "in",
+  "content": {
+    "field": "files.file_id",
+    "value": [
+      "00b7ee04-b97b-49ee-b27b-13f6fb981fec",
+      "00ec5e0d-ffb4-4975-9bec-75d88a5a5411"
+    ]
+  }
+}
+params = {
+  "filters": json.dumps(filt),
+  "format": "JSON",
+  "fields": "file_id, file_name, analysis.metadata.read_groups.target_capture_kit_name",
+  "size": "10"
+}
+response = requests.get(endpt, params = params)
+print(json.dumps(response.json(), indent=2))
+
+
+21ddbfaa-1b21-4a2b-be2c-237dd69b20ff
