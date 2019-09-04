@@ -105,9 +105,16 @@ curl 'https://api.gdc.cancer.gov/projects/TARGET-NBL?expand=summary,summary.expe
 import requests
 import json
 
+endpt = 'https://api.gdc.cancer.gov/annotations/'
+endpt = 'https://api.gdc.cancer.gov/cases/'
+endpt = 'https://api.gdc.cancer.gov/files/'
 endpt = 'https://api.gdc.cancer.gov/projects/'
-uuid = '00b7ee04-b97b-49ee-b27b-13f6fb981fec'
+endpt = 'https://api.gdc.cancer.gov/legacy/files/'
+uuid = '308be819-2bdf-4fe5-93ba-dab8fd616ce8' # file_id, use with files endpoint
+uuid = 'e1c20274-9fbd-44aa-8127-2c62b380e16a' # submitter_id, not sure which endpoint to use with
+id = 'TCGA-A6-5664-01A-21D-1835-10'
 response = requests.get(endpt + uuid)
+response = requests.get(endpt + id)
 print(json.dumps(response.json(), indent=2))
 
 
@@ -128,6 +135,19 @@ files.analysis.metadata.read_groups.target_capture_kit_name
 File Fields
 analysis.metadata.read_groups.target_capture_kit_name
 
+## Properties (highest to lowest)
+program.name
+project.code
+project_id = program.name-project.code
+id = uuid for entity
+submitter_id = any string, unique within project, same as submitted_subject_id of study participant in dbGaP record when entity is type case
+
+### Type
+* project, case, demographic, sample, read_group
+
+### UUID
+files, cases, samples are examples of entities (objects) and have UUIDs
+
 # Request parameter example
 endpt = 'https://api.gdc.cancer.gov/cases/'
 filt = {
@@ -137,30 +157,6 @@ filt = {
     "value": ["male"]
   }
 }
-params = {'filters': json.dumps(filt), 'fields':'case_id', 'expand': 'analysis.metadata.read_groups.target_capture_kit_name, files.analysis.metadata.read_groups.target_capture_kit_name'}
+params = {'filters': json.dumps(filt), 'fields': 'case_id', 'expand': 'analysis.metadata.read_groups.target_capture_kit_name,files.analysis.metadata.read_groups.target_capture_kit_name'}
 response = requests.get(endpt, params = params)
 print(json.dumps(response.json(), indent=2))
-
-# Request specific fields for specific files
-endpt = 'https://api.gdc.cancer.gov/files/'
-filt = {
-  "op": "in",
-  "content": {
-    "field": "files.file_id",
-    "value": [
-      "00b7ee04-b97b-49ee-b27b-13f6fb981fec",
-      "00ec5e0d-ffb4-4975-9bec-75d88a5a5411"
-    ]
-  }
-}
-params = {
-  "filters": json.dumps(filt),
-  "format": "JSON",
-  "fields": "file_id, file_name, analysis.metadata.read_groups.target_capture_kit_name",
-  "size": "10"
-}
-response = requests.get(endpt, params = params)
-print(json.dumps(response.json(), indent=2))
-
-
-21ddbfaa-1b21-4a2b-be2c-237dd69b20ff
