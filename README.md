@@ -4,7 +4,7 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 
 ## Sample selection
 1. From the [GDC data portal](https://portal.gdc.cancer.gov/), we select all colon, rectosigmoid, and rectum samples from TCGA-COAD and TCGA-READ without a filter for tumor type (i.e. we do not care whether the diagnosis was adenocarcinoma or cystic neoplasm).
-2. We add all WXS files to our cart, and we find there are a total of 1,303 files from 608 unique cases (i.e. subjects); this data takes up 31.31 TB of disk space.
+2. We add all WXS files to our cart, and we find there are a total of 1,303 files from 608 unique cases (i.e. subjects); this data takes up 31.31 TB of disk space (including index files).
 3. From our cart, we download the following annotation files:
   * biospecimen.cart.2019-07-13.json
   * biospecimen.cart.2019-07-13.tar.gz
@@ -13,6 +13,8 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
   * gdc_sample_sheet.2019-07-13.tsv
   * metadata.cart.2019-07-13.json
 4. Using gdc_sample_sheet.2019-07-13.tsv along with [samples.py](scripts/samples.py), we explore the basic characteristics of our cohort.
+5. We can partially replicate this dataset with [scripts/gdc_requests_files.py](gdc_requests_files.py).
+  * We can identify the sequencing files but can't easily capture the annotation files, although most of the important fields can be captured
 
 | Sample type | *n* |
 | :--: | :--: |
@@ -22,7 +24,7 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 | Recurrent Tumor | 2 |
 | Metastatic | 1 |
 
-5. Among identifiers in the sample sheet, there are 1,259 unique 'Sample ID's, 608 unique 'Case ID's, 1,303 unique 'File Name's and 'File ID's.
+6. Among identifiers in the sample sheet, there are 1,259 unique 'Sample ID's, 608 unique 'Case ID's, 1,303 unique 'File Name's and 'File ID's.
 
 ### Normal tissue
 1. We start by examining the normal tissue from which we will call SNVs.
@@ -50,10 +52,7 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 1. From our normal WXS data, we want to call germline SNVs. We could also call somatic mutations, but the TCGA VCF files should suffice for that.
 2. We start with our subset of five normal tissue samples that are unique and have a unique tumor sample partner. There are 510 of these unique pairs in total.
 3. Our [download script](download.slurm) does not seem to work on the compute nodes, so we run it on a login node. We expect the download to be about 240 GB (average file size of [31 210 000 000 000 bytes / 1303 files] = 24 GB * 10 files). The actual file size is 218 GB for 10 BAM files.
-4. We call variants with...
-
-
-# Scratch space
+4. We call variants with GATK-HC
 
 ## Variant calling pipelines
 * [Kumaran, 2019](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-2928-9) finds BWA or Novoalign with DeepVariant or SAMTools give best SNV results (GIAB gold standard)
@@ -62,11 +61,27 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 * [Liu, 2013](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0075619), using BWA, finds GATK outperforms SAMTools (Sanger gold standard)... may be due to GATK outperformance for indels
 
 ## Genome in a Bottle (NIST)
-* [Zook, 2014](https://www.nature.com/articles/nbt.2835) introduces GIAB
+* [Zook, 2014](https://www.nature.com/articles/nbt.2835) introduces GIAB (uses GATK-HC + GATK-UG + Cortex for gold standard variant calls)
 
 ## Exome capture kits
 * [Wang, 2018](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0204912) reports that exome capture kits bias results for limited number of genes; [Github](https://github.com/TheJacksonLaboratory/GDCSlicing) may have code to extract exome capture kit from metadata
+* [WouterDeCoster](https://www.biostars.org/p/220939/) suggests using primary target coordinates for analysis (as opposed to capture targets, i.e. the bait); this is consistent with target_capture_kit_target_region url provided in TCGA metadata from GDC
+* [Baylor kit](https://sequencing.roche.com/en/products-solutions/by-category/target-enrichment/hybridization/seqcap-ez-hgsc-vcrome.html)
 
+| Kit | *n* |
+| :--: | :--: |
+| SeqCap EZ HGSC VCRome | 878 |
+| SureSelect Human All Exon 38 Mb v2 | 186 |
+| Gapfiller_7m | 94 |
+| SeqCap EZ Human Exome Library v2.0 | 49 |
+| VCRome V2.1 | 47 |
+| VCRomeV2.1-PKv1 | 31 |
+| Custom V2 Exome Bait, 48 RXN X 16 tubes | 2 |
+| SeqCap EZ Exome V2.0 | 1 |
+| NaN | 15 |
+
+
+# Scratch space
 
 ## R code for GDC TCGA API
         # if(json$data$pagination$count == 0) {
@@ -89,74 +104,3 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
         #         }
         #     )
         # }
-
-https://api.gdc.cancer.gov/<endpoint>
-https://api.gdc.cancer.gov/legacy/<endpoint>
-
-https://api.gdc.cancer.gov/annotations
-https://api.gdc.cancer.gov/files
-https://api.gdc.cancer.gov/projects
-
-# curl
-curl https://api.gdc.cancer.gov/annotations/9977f28d-e585-45bc-86a4-1489fd7d2810?pretty=true
-curl 'https://api.gdc.cancer.gov/projects/TARGET-NBL?expand=summary,summary.experimental_strategies,summary.data_categories&pretty=true'
-
-# python
-import requests
-import json
-
-endpt = 'https://api.gdc.cancer.gov/annotations/'
-endpt = 'https://api.gdc.cancer.gov/cases/'
-endpt = 'https://api.gdc.cancer.gov/files/'
-endpt = 'https://api.gdc.cancer.gov/projects/'
-endpt = 'https://api.gdc.cancer.gov/legacy/files/'
-uuid = '308be819-2bdf-4fe5-93ba-dab8fd616ce8' # file_id, use with files endpoint
-uuid = 'e1c20274-9fbd-44aa-8127-2c62b380e16a' # submitter_id, not sure which endpoint to use with
-id = 'TCGA-A6-5664-01A-21D-1835-10'
-response = requests.get(endpt + uuid)
-response = requests.get(endpt + id)
-print(json.dumps(response.json(), indent=2))
-
-
-filters = null
-format = JSON
-pretty = false
-fields = null
-expand = null
-size = 10
-from = 0
-sort = null
-facets = null
-
-
-Case Fields
-files.analysis.metadata.read_groups.target_capture_kit_name
-
-File Fields
-analysis.metadata.read_groups.target_capture_kit_name
-
-## Properties (highest to lowest)
-program.name
-project.code
-project_id = program.name-project.code
-id = uuid for entity
-submitter_id = any string, unique within project, same as submitted_subject_id of study participant in dbGaP record when entity is type case
-
-### Type
-* project, case, demographic, sample, read_group
-
-### UUID
-files, cases, samples are examples of entities (objects) and have UUIDs
-
-# Request parameter example
-endpt = 'https://api.gdc.cancer.gov/cases/'
-filt = {
-  "op": "=",
-  "content": {
-    "field": "cases.demographic.gender",
-    "value": ["male"]
-  }
-}
-params = {'filters': json.dumps(filt), 'fields': 'case_id', 'expand': 'analysis.metadata.read_groups.target_capture_kit_name,files.analysis.metadata.read_groups.target_capture_kit_name'}
-response = requests.get(endpt, params = params)
-print(json.dumps(response.json(), indent=2))
