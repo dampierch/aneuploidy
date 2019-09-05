@@ -1,15 +1,22 @@
 # GDC API
 * [Data model](https://docs.gdc.cancer.gov/Data/Data_Model/GDC_Data_Model/)
 * [API guide](https://docs.gdc.cancer.gov/API/Users_Guide/Getting_Started/)
+* can test scripts interactively
+```
+module load anaconda/5.2.0-py3.6; python
+file = '/sfs/qumulo/qhome/chd5n/projects/aneuploidy/scripts/gdc_requests_cases.py'
+exec(open(file).read())
+```
 
 ## endpoints
 ```
 https://api.gdc.cancer.gov/<endpoint>
 https://api.gdc.cancer.gov/legacy/<endpoint>
 
-https://api.gdc.cancer.gov/annotations
+https://api.gdc.cancer.gov/annotations # comments on data
 https://api.gdc.cancer.gov/files
 https://api.gdc.cancer.gov/projects
+https://api.gdc.cancer.gov/cases
 ```
 
 ## properties
@@ -140,6 +147,6 @@ print(json.dumps(response.json(), indent=2))
 ```
 print(json.dumps(response.json(), indent=2))
 
-with open('path/to_file.txt', 'w+') as f:
+with open('/scratch/chd5n/aneuploidy/test_request.txt', 'w+') as f:
     f.write(response.content.decode('utf-8'))
 ```

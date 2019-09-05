@@ -1,12 +1,17 @@
-import requests
-import json
+#!/usr/bin/env python
+
+    # this script returns the files_res object
+
 import io
+import json
+import os
 import pandas as pd
+import requests
 
 data_home = '/scratch/chd5n/aneuploidy/'
 anno_path = data_home + 'raw-data/annotations/'
 
-# get all WXS file_id entities from TCGA-COAD and READ
+# request WXS file_id entities from TCGA-COAD and READ
 files_endpt = 'https://api.gdc.cancer.gov/files/'
 
 fields = [
@@ -131,51 +136,10 @@ params = {
 
 response = requests.get(files_endpt, params = params)
 object = io.StringIO(response.content.decode('utf-8'))
-res = pd.read_table(object)
-
-column_dict = {
-    'cases.0.samples.0.is_ffpe': 'is_ffpe',
-    'cases.0.exposures.0.height': 'height',
-    'cases.0.tissue_source_site.name': 'hospital',
-    'cases.0.project.project_id': 'project_id',
-    'cases.0.demographic.year_of_birth': 'birth_year',
-    'id': 'uuid',
-    'cases.0.samples.0.sample_type': 'tissue_type',
-    'cases.0.demographic.days_to_death': 'days_to_death',
-    'cases.0.demographic.vital_status': 'vital_status',
-    'cases.0.samples.0.sample_id': 'sample_id',
-    'cases.0.exposures.0.weight': 'weight',
-    'cases.0.demographic.race': 'race',
-    'cases.0.demographic.age_at_index': 'age_at_index',
-    'cases.0.demographic.gender': 'sex',
-    'cases.0.case_id': 'case_id',
-    'cases.0.primary_site': 'primary_site',
-    'cases.0.exposures.0.bmi': 'bmi'
-}
-
-column_order = ['file_id', 'uuid', 'file_name', 'sample_id', 'case_id', 'submitter_id', 'project_id', 'primary_site', 'tissue_type', 'birth_year', 'vital_status', 'age_at_index', 'days_to_death', 'height', 'weight', 'bmi', 'race', 'sex', 'hospital', 'is_ffpe', 'experimental_strategy', 'data_format', 'data_category', 'file_size', 'md5sum', 'state']
-
-res = res.rename(column_dict, axis='columns')
-res = res[column_order]
-
-# create manifest
-    ## id, filename, md5, size, state
-select = ['file_id', 'file_name', 'md5sum', 'file_size', 'state']
-manifest = res[select]
-manifest.columns = ['id', 'filename', 'md5', 'size', 'state']
-manifest = manifest.sort_values(by=['id'])
-os.chdir(anno_path)
-manifest.to_csv('manifest.tsv', sep='\t', index=False)
-
-# create pheno annotations file
-select = ['file_id', 'file_name', 'sample_id', 'case_id', 'submitter_id', 'project_id', 'primary_site', 'tissue_type', 'birth_year', 'vital_status', 'age_at_index', 'days_to_death', 'height', 'weight', 'bmi', 'race', 'sex', 'hospital', 'is_ffpe']
-pheno = res[select]
-pheno = pheno.sort_values(by=['file_id'])
-os.chdir(anno_path)
-pheno.to_csv('pheno.tsv', sep='\t', index=False)
+files_res = pd.read_table(object)
 
 # request exome capture kits
-index = res['file_id'].tolist()
+index = files_res['file_id'].tolist()
 idx_siz = 150
 idx_blk = []
 idx = []
@@ -222,4 +186,33 @@ for i in idx_blk:
     x = x[select]
     kits = kits.append(x)
 
-# add capture kit to pheno annotation file
+kits.columns = ['file_id', 'capture_kit_name', 'capture_kit_vendor']
+
+# merge files_res and capture kits
+files_res = files_res.merge(kits, on='file_id')
+
+# format files_res
+column_dict = {
+    'cases.0.samples.0.is_ffpe': 'is_ffpe',
+    'cases.0.exposures.0.height': 'height',
+    'cases.0.tissue_source_site.name': 'hospital',
+    'cases.0.project.project_id': 'project_id',
+    'cases.0.demographic.year_of_birth': 'birth_year',
+    'id': 'uuid',
+    'cases.0.samples.0.sample_type': 'tissue_type',
+    'cases.0.demographic.days_to_death': 'days_to_death',
+    'cases.0.demographic.vital_status': 'vital_status',
+    'cases.0.samples.0.sample_id': 'sample_id',
+    'cases.0.exposures.0.weight': 'weight',
+    'cases.0.demographic.race': 'race',
+    'cases.0.demographic.age_at_index': 'age_at_index',
+    'cases.0.demographic.gender': 'sex',
+    'cases.0.case_id': 'case_id',
+    'cases.0.primary_site': 'primary_site',
+    'cases.0.exposures.0.bmi': 'bmi'
+}
+
+column_order = ['file_id', 'uuid', 'file_name', 'sample_id', 'case_id', 'submitter_id', 'project_id', 'primary_site', 'tissue_type', 'birth_year', 'vital_status', 'age_at_index', 'days_to_death', 'height', 'weight', 'bmi', 'race', 'sex', 'hospital', 'is_ffpe', 'capture_kit_name', 'capture_kit_vendor', 'experimental_strategy', 'data_format', 'data_category', 'file_size', 'md5sum', 'state']
+
+files_res = files_res.rename(column_dict, axis='columns')
+files_res = files_res[column_order]

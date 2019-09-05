@@ -1,20 +1,37 @@
-import requests
+#!/usr/bin/env python
+
+    # this script returns to cases_res object
+
+import io
 import json
 import os
+import pandas as pd
+import requests
+
+data_home = '/scratch/chd5n/aneuploidy/'
+anno_path = data_home + 'raw-data/annotations/'
 
 # get all case_id's from TCGA-COAD and READ
-    ## this gives 630 unique case_id entries
-    ## expecting 608 based on website, maybe some have no data
-    ## we do get 608 unique case_id entries (and 1303 files) using files endpoint
+    ## finds 630 unique case_id entries w/o experimental_strategy and data_category filters
+    ## finds 608 unique case_id entries (and 1303 files) using filters
 cases_endpt = 'https://api.gdc.cancer.gov/cases'
 
 fields = [
-    'submitter_id',
-    'case_id',
-    'primary_site',
-    'disease_type',
-    'project.project_id'
-    ]
+    'submitter_id', # good
+    'case_id', # good
+    'disease_type', # good
+    # 'sample_ids' # ok
+
+    # "submitter_analyte_ids", #?
+    # "analyte_ids", #?
+    # "portion_ids", #?
+    # "submitter_portion_ids", #?
+
+    # "days_to_index", # empty
+    # 'samples.biospecimen_anatomic_site', # empty
+    # 'samples.distance_normal_to_tumor', # empty
+    # 'samples.annotations.case_id', # empty
+]
 fields = ','.join(fields)
 
 filters = {
@@ -45,6 +62,20 @@ filters = {
                 'field': 'primary_site',
                 'value': ['Colon', 'Rectum', 'Rectosigmoid junction']
             }
+        },
+        {
+            'op': 'in',
+            'content': {
+                'field': 'files.experimental_strategy',
+                'value': ['WXS']
+            }
+        },
+        {
+            'op': 'in',
+            'content': {
+                'field': 'files.data_category',
+                'value': ['Sequencing Reads']
+            }
         }
     ]
 }
@@ -58,6 +89,5 @@ params = {
     }
 
 response = requests.get(cases_endpt, params = params)
-
-with open('/scratch/chd5n/aneuploidy/test_request.txt', 'w+') as f:
-    f.write(response.content.decode('utf-8'))
+object = io.StringIO(response.content.decode('utf-8'))
+cases_res = pd.read_table(object)
