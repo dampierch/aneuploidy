@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-    # this script returns to cases_res object
+    # this script returns the cases_res object
 
 import io
 import json
