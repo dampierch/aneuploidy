@@ -13,8 +13,8 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
   * gdc_sample_sheet.2019-07-13.tsv
   * metadata.cart.2019-07-13.json
 4. Using gdc_sample_sheet.2019-07-13.tsv along with [samples.py](scripts/samples.py), we explore the basic characteristics of our cohort.
-5. We can partially replicate this dataset with [scripts/gdc_requests_files.py](gdc_requests_files.py).
-  * We can identify the sequencing files but can't easily capture the annotation files, although most of the important fields can be captured
+5. We can partially replicate this dataset with [gdc_requests_files.py](scripts/gdc_requests_files.py).
+  * We can identify the sequencing files but can't easily capture the annotation files, although most of the important fields can be captured with [gdc_write_anno.py](scripts/gdc_write_anno.py)
 
 | Sample type | *n* |
 | :--: | :--: |
