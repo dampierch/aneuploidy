@@ -13,7 +13,7 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
   * gdc_sample_sheet.2019-07-13.tsv
   * metadata.cart.2019-07-13.json
 4. Using gdc_sample_sheet.2019-07-13.tsv along with [samples.py](scripts/samples.py), we explore the basic characteristics of our cohort.
-5. We can partially replicate this dataset with [gdc_requests_files.py](scripts/gdc_requests_files.py).
+5. We can mostly replicate this dataset with [gdc_requests_files.py](scripts/gdc_requests_files.py).
   * We can identify the sequencing files but can't easily capture the annotation files, although most of the important fields can be captured with [gdc_write_anno.py](scripts/gdc_write_anno.py)
 
 | Sample type | *n* |
@@ -79,6 +79,29 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 | Custom V2 Exome Bait, 48 RXN X 16 tubes | 2 |
 | SeqCap EZ Exome V2.0 | 1 |
 | NaN | 15 |
+
+## Pearson code
+
+1. WP::download files (uses curl with JSON request)
+
+* CHD::my version identifies files with filtered searches via API and generates a manifest for bulk download with gdc-client and a pheno file for parsing:
+* [gdc_requests_cases.py](scripts/gdc_requests_cases.py)
+* [gdc_requests_files.py](scripts/gdc_requests_files.py)
+* [gdc_write_anno.py](scripts/gdc_write_anno.py)
+
+2. WP::parse_tcga_info.py hall_tcga_t10b10.tab > hall_tcga_t10b10.file_info
+* generates file with following fields: sample_id | sample_type | file_name | file_id
+* for normal, tumor pairs (in that order); not sure how it deals with duplicated samples
+
+* CHD::i should be able to modify parse_tcga_info.py to take as input pheno.tsv and generate samples.file_info
+
+3. WP::nohup ~/ncbi/gdc_download_file_info.sh ~/ncbi/hall_tcga_t61-80.file_info > gdc_down_t61-80.log 2> gdc_down_t61-80.err &
+* bash script feeds file uuid from parse*.py output to gdc-client instead of manifest; this allows more precise download but does not appear to permit the ever-ellusive sbatch download
+
+* CHD::i should use the WP download strategy, because i can't use bulk download anyway (not enough storage space)
+
+
+
 
 
 # Scratch space
