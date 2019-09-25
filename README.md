@@ -2,7 +2,38 @@
 
 An investigation into the drivers of CIN in CRC using TCGA WXS.
 
-## Sample selection
+## Pipeline
+
+1. WRP::download files (uses curl with JSON request)
+
+  * CHD::my version identifies files with filtered searches via API and generates a manifest for bulk download with gdc-client and a pheno file for parsing:
+  * [gdc_requests_cases.py](scripts/gdc_requests_cases.py)
+  * [gdc_requests_files.py](scripts/gdc_requests_files.py)
+  * [gdc_write_anno.py](scripts/gdc_write_anno.py)
+
+2. WRP::parse_tcga_info.py hall_tcga_t10b10.tab > hall_tcga_t10b10.file_info
+* generates file with following fields: sample_id | sample_type | file_name | file_id
+* for normal, tumor pairs (in that order); not sure how it deals with duplicated samples
+
+  * CHD::i should be able to modify parse_tcga_info.py to take as input pheno.tsv and generate samples.file_info
+  * i do so in the follow script and of duplicates i take max sequences:
+  * [parse_gdc_info.py](scripts/parse_gdc_info.py)
+
+3. WRP::nohup ~/ncbi/gdc_download_file_info.sh ~/ncbi/hall_tcga_t61-80.file_info > gdc_down_t61-80.log 2> gdc_down_t61-80.err &
+* bash script feeds file uuid from parse*.py output to gdc-client instead of manifest; this allows more precise download but does not appear to permit the ever-ellusive sbatch download
+
+  * CHD::i should use the WP download strategy, because i can't use bulk download anyway (not enough storage space)
+  * for the first ten pairs (20 samples):
+  * [gdc_download.bash](scripts/gdc_download.bash)
+  ```
+  dt=`date +"%Y-%m-%d"`
+  nohup ~/projects/aneuploidy/scripts/gdc_download.bash > ~/projects/aneuploidy/logs/gdc_download_${dt}.out 2> ~/projects/aneuploidy/logs/gdc_download_${dt}.err &
+  ```
+
+
+## early thoughts
+
+### Sample selection
 1. From the [GDC data portal](https://portal.gdc.cancer.gov/), we select all colon, rectosigmoid, and rectum samples from TCGA-COAD and TCGA-READ without a filter for tumor type (i.e. we do not care whether the diagnosis was adenocarcinoma or cystic neoplasm).
 2. We add all WXS files to our cart, and we find there are a total of 1,303 files from 608 unique cases (i.e. subjects); this data takes up 31.31 TB of disk space (including index files).
 3. From our cart, we download the following annotation files:
@@ -26,7 +57,7 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 
 6. Among identifiers in the sample sheet, there are 1,259 unique 'Sample ID's, 608 unique 'Case ID's, 1,303 unique 'File Name's and 'File ID's.
 
-### Normal tissue
+#### Normal tissue
 1. We start by examining the normal tissue from which we will call SNVs.
 2. There are 672 samples of normal tissue WXS.
 3. There are 601 unique cases among those samples; 71 samples are non-unique.
@@ -34,7 +65,7 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 5. We may have a soft preference for blood-derived normal WXS over adjacent normal tissue, but the choice at this point is arbitrary between duplicate blood-derived normals due to lack of quality parameters.
 6. There are 533 cases with unique tissue samples, 477 blood-derived and 56 solid tissue (i.e. adjacent normal).
 
-### Tumor tissue
+#### Tumor tissue
 1. We next examine the tumor tissue we will test for functional aneuploidy.
 2. There are 628 samples of tumor tissue WXS.
 3. There are 594 unique cases among those samples; 34 samples are non-unique.
@@ -42,28 +73,28 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 5. At this point, the choice is arbitrary among the duplicates, as all are Primary Tumor, and we do not have quality parameters.
 6. There are 566 cases with unique tissue samples, all primary tumor.
 
-### Pilot
+#### Pilot
 1. We create a pilot set of five cases from the set of unique normal samples and match them with their five tumor counterparts. We use [samples.py](scripts/samples.py) to generate a pilot manifest.
 2. We use the [gdc-client](https://gdc.cancer.gov/access-data/gdc-data-transfer-tool) to download BAM files to a `/scratch` directory.
 3. After checking library format with [libFormat.slurm](scripts/libFormat.slurm), we use [Biobambam2](https://www.sanger.ac.uk/science/tools/biobambam) to revert the BAM files to FASTQ and [pigz](https://zlib.net/pigz/) to compress them.
 
-## Variants
+### Variants
 
 1. From our normal WXS data, we want to call germline SNVs. We could also call somatic mutations, but the TCGA VCF files should suffice for that.
 2. We start with our subset of five normal tissue samples that are unique and have a unique tumor sample partner. There are 510 of these unique pairs in total.
 3. Our [download script](download.slurm) does not seem to work on the compute nodes, so we run it on a login node. We expect the download to be about 240 GB (average file size of [31 210 000 000 000 bytes / 1303 files] = 24 GB * 10 files). The actual file size is 218 GB for 10 BAM files.
 4. We call variants with GATK-HC
 
-## Variant calling pipelines
+### Variant calling pipelines
 * [Kumaran, 2019](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-2928-9) finds BWA or Novoalign with DeepVariant or SAMTools give best SNV results (GIAB gold standard)
 * [Hwang, 2015](https://www.nature.com/articles/srep17875?report=reader) finds BWA-MEM with SAMTools gives best SNV results; also Samtools tends to add reference alleles and thereby overcall heterozygous SNVs (GIAB gold standard)
 * [Pirooznia, 2014](https://humgenomics.biomedcentral.com/articles/10.1186/1479-7364-8-14), using BWA with realignment/recalibration, finds GATK-UG outperforms SAMTools mpileup and GATK-HC better than GATK-UG (Sanger gold standard)... may be due to GATK outperformance for indels
 * [Liu, 2013](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0075619), using BWA, finds GATK outperforms SAMTools (Sanger gold standard)... may be due to GATK outperformance for indels
 
-## Genome in a Bottle (NIST)
+### Genome in a Bottle (NIST)
 * [Zook, 2014](https://www.nature.com/articles/nbt.2835) introduces GIAB (uses GATK-HC + GATK-UG + Cortex for gold standard variant calls)
 
-## Exome capture kits
+### Exome capture kits
 * [Wang, 2018](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0204912) reports that exome capture kits bias results for limited number of genes; [Github](https://github.com/TheJacksonLaboratory/GDCSlicing) may have code to extract exome capture kit from metadata
 * [WouterDeCoster](https://www.biostars.org/p/220939/) suggests using primary target coordinates for analysis (as opposed to capture targets, i.e. the bait); this is consistent with target_capture_kit_target_region url provided in TCGA metadata from GDC
 * [Baylor kit](https://sequencing.roche.com/en/products-solutions/by-category/target-enrichment/hybridization/seqcap-ez-hgsc-vcrome.html)
@@ -79,29 +110,6 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 | Custom V2 Exome Bait, 48 RXN X 16 tubes | 2 |
 | SeqCap EZ Exome V2.0 | 1 |
 | NaN | 15 |
-
-## Pearson code
-
-1. WP::download files (uses curl with JSON request)
-
-* CHD::my version identifies files with filtered searches via API and generates a manifest for bulk download with gdc-client and a pheno file for parsing:
-* [gdc_requests_cases.py](scripts/gdc_requests_cases.py)
-* [gdc_requests_files.py](scripts/gdc_requests_files.py)
-* [gdc_write_anno.py](scripts/gdc_write_anno.py)
-
-2. WP::parse_tcga_info.py hall_tcga_t10b10.tab > hall_tcga_t10b10.file_info
-* generates file with following fields: sample_id | sample_type | file_name | file_id
-* for normal, tumor pairs (in that order); not sure how it deals with duplicated samples
-
-* CHD::i should be able to modify parse_tcga_info.py to take as input pheno.tsv and generate samples.file_info
-
-3. WP::nohup ~/ncbi/gdc_download_file_info.sh ~/ncbi/hall_tcga_t61-80.file_info > gdc_down_t61-80.log 2> gdc_down_t61-80.err &
-* bash script feeds file uuid from parse*.py output to gdc-client instead of manifest; this allows more precise download but does not appear to permit the ever-ellusive sbatch download
-
-* CHD::i should use the WP download strategy, because i can't use bulk download anyway (not enough storage space)
-
-
-
 
 
 # Scratch space

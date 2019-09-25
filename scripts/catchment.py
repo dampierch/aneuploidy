@@ -1,5 +1,8 @@
 # CRC catchment code
 
+    # this script takes cdc crc incidence data from nation and plots density
+    # by state so that we can see where burden is
+
 # libraries
 import os
 import pandas as pd

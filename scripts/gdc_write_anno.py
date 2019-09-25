@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-    # this script creates the manifest and pheno objects and writes them to file
+    # this script creates manifest and pheno objects from gdc query results
+    # and writes them to file for future use in download or parsing; the key
+    # field offered by cases endpoint is the subject_id (submitter_id)
 
 import io
 import json
@@ -31,7 +33,7 @@ os.chdir(anno_path)
 manifest.to_csv('manifest.tsv', sep='\t', index=False)
 
 # create pheno annotations object and write to file
-select = ['file_id', 'file_name', 'sample_id', 'case_id', 'submitter_id', 'subject_id', 'project_id', 'disease_type', 'primary_site', 'tissue_type', 'birth_year', 'vital_status', 'age_at_index', 'days_to_death', 'height', 'weight', 'bmi', 'race', 'sex', 'hospital', 'is_ffpe', 'capture_kit_name', 'capture_kit_vendor']
+select = ['file_id', 'file_name', 'sample_id', 'case_id', 'submitter_id', 'subject_id', 'project_id', 'disease_type', 'primary_site', 'tissue_type', 'birth_year', 'vital_status', 'age_at_index', 'days_to_death', 'height', 'weight', 'bmi', 'race', 'sex', 'hospital', 'is_ffpe', 'total_seq', 'capture_kit_name', 'capture_kit_vendor']
 pheno = files_res[select]
 pheno = pheno.sort_values(by=['file_id'])
 os.chdir(anno_path)

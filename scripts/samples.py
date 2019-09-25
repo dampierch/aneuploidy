@@ -2,6 +2,8 @@ import os
 import pandas as pd
 import re
 
+    # this script helps explore the samples selected via the gdc web interface
+
 aneuploidy_home = "/scratch/chd5n/aneuploidy/"
 aneuploidy_raw_annotations = aneuploidy_home + "raw-data/annotations/"
 

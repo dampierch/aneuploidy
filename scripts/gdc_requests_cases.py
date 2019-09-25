@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-    # this script returns the cases_res object
+    # this script queries the gdc archive via the search and retrieve api and
+    # returns the cases_res object (results from cases endpoint query)
 
 import io
 import json

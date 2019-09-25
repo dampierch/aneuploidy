@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
-    # this script returns the files_res object
+    # this script queries the gdc archive via the search and retrieve api and
+    # returns the files_res object (results from files endpoint query)
 
 import io
 import json
 import os
 import pandas as pd
 import requests
+import re
 
 data_home = '/scratch/chd5n/aneuploidy/'
 anno_path = data_home + 'raw-data/annotations/'
@@ -41,6 +43,9 @@ fields = [
     'cases.exposures.bmi',
     'cases.exposures.height'
 
+    ## nested nature makes more suitable for special lookup
+    #'analysis.metadata.read_groups.read_group_qcs.total_sequences',
+
     ## nested nature makes more suitable for invididual lookup
     # 'analysis.metadata.read_groups.target_capture_kit_name',
     # 'analysis.metadata.read_groups.target_capture_kit',
@@ -65,6 +70,15 @@ fields = [
     # 'analysis.metadata.read_groups.target_capture_kit_version', # empty
     # 'analysis.metadata.read_groups.RIN', # empty
     # 'analysis.metadata.read_groups.instrument_model', # empty
+    # 'analysis.metadata.read_groups.read_group_qcs.per_tile_sequence_quality', # PASS/FAIL/WARN
+    # 'analysis.metadata.read_groups.read_group_qcs.per_base_sequence_content', # PASS/FAIL/WARN
+    # 'analysis.metadata.read_groups.read_group_qcs.per_base_sequence_quality', # PASS/FAIL/WARN
+    # 'analysis.metadata.read_groups.read_group_qcs.per_sequence_gc_content', # PASS/FAIL/WARN
+    # 'analysis.metadata.read_groups.read_group_qcs.per_sequence_quality_score', # PASS/FAIL/WARN
+    # 'analysis.metadata.read_groups.read_group_qcs.workflow_type', # empty
+    # 'analysis.metadata.read_groups.read_group_qcs.workflow_version', # empty
+    # 'analysis.metadata.read_groups.read_group_qcs.fastq_name', # empty
+    # 'analysis.metadata.read_groups.read_group_qcs.basic_statistics', # empty
     # 'downstream_analyses.output_files.proportion_reads_mapped', # empty
     # 'downstream_analyses.output_files.proportion_targets_no_coverage', # empty
     # 'archive.archive_id', # empty
@@ -137,6 +151,34 @@ params = {
 response = requests.get(files_endpt, params = params)
 object = io.StringIO(response.content.decode('utf-8'))
 files_res = pd.read_table(object)
+
+# request total sequences
+fields = [
+    'file_id',
+    'analysis.metadata.read_groups.read_group_qcs.total_sequences'
+]
+fields = ','.join(fields)
+
+params = {
+    'filters': filters,
+    'fields': fields,
+    'format': 'TSV',
+    'size': '1500'
+    }
+
+response = requests.get(files_endpt, params = params)
+object = io.StringIO(response.content.decode('utf-8'))
+seq_bloks = pd.read_table(object)
+
+cols = list(seq_bloks.columns)
+pattern = re.compile(r'analysis.metadata.read_groups.\d*.read_group_qcs.0.total_sequences') # identify all possible seq groups and take first of paired-end seq counts
+seq_ttl = seq_bloks[list(filter(pattern.match, cols))].sum(axis=1).astype(int)
+f_id = seq_bloks['file_id']
+frame = {'file_id': f_id, 'total_seq': seq_ttl}
+total_seq = pd.DataFrame(frame)
+
+# merge files_res and total_seq
+files_res = files_res.merge(total_seq, on='file_id')
 
 # request exome capture kits
 index = files_res['file_id'].tolist()
@@ -212,7 +254,7 @@ column_dict = {
     'cases.0.exposures.0.bmi': 'bmi'
 }
 
-column_order = ['file_id', 'uuid', 'file_name', 'sample_id', 'case_id', 'submitter_id', 'project_id', 'primary_site', 'tissue_type', 'birth_year', 'vital_status', 'age_at_index', 'days_to_death', 'height', 'weight', 'bmi', 'race', 'sex', 'hospital', 'is_ffpe', 'capture_kit_name', 'capture_kit_vendor', 'experimental_strategy', 'data_format', 'data_category', 'file_size', 'md5sum', 'state']
+column_order = ['file_id', 'uuid', 'file_name', 'sample_id', 'case_id', 'submitter_id', 'project_id', 'primary_site', 'tissue_type', 'birth_year', 'vital_status', 'age_at_index', 'days_to_death', 'height', 'weight', 'bmi', 'race', 'sex', 'hospital', 'is_ffpe', 'capture_kit_name', 'capture_kit_vendor', 'experimental_strategy', 'data_format', 'data_category', 'total_seq', 'file_size', 'md5sum', 'state']
 
 files_res = files_res.rename(column_dict, axis='columns')
 files_res = files_res[column_order]

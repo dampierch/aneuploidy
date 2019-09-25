@@ -10,6 +10,8 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=chd5n@virginia.edu
 
+  # this script downloads data from gdc with gdc-client according to manifest
+
 # To get the GDC-Client:
 # cd ~/Apps
 # wget https://gdc.cancer.gov/system/files/authenticated%20user/0/gdc-client_v1.4.0_Ubuntu_x64.zip
