@@ -4,7 +4,8 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 
 ## Pipeline
 
-1. WRP::download files (uses curl with JSON request)
+### WRP::download files
+* uses curl with JSON request
 
   * CHD::my version identifies files with filtered searches via API and generates a manifest for bulk download with gdc-client and a pheno file for parsing:
   * [gdc_requests_cases.py](scripts/gdc_requests_cases.py)
@@ -27,7 +28,7 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
   * [gdc_download.bash](scripts/gdc_download.bash)
   ```
   dt=`date +"%Y-%m-%d"`
-  nohup ~/projects/aneuploidy/scripts/gdc_download.bash > ~/projects/aneuploidy/logs/gdc_download_${dt}.out 2> ~/projects/aneuploidy/logs/gdc_download_${dt}.err &
+  nohup bash ~/projects/aneuploidy/scripts/gdc_download.bash > ~/projects/aneuploidy/logs/gdc_download_${dt}.out 2> ~/projects/aneuploidy/logs/gdc_download_${dt}.err &
   ```
 
 
