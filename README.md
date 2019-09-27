@@ -4,32 +4,108 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 
 ## Pipeline
 
-### WRP::download files
-* uses curl with JSON request
+### WRP::request file info from GDC
+* uses JSON request to files endpoint via curl
+* identifies files by filter for cases.submitter_id (subject_id)
 
-  * CHD::my version identifies files with filtered searches via API and generates a manifest for bulk download with gdc-client and a pheno file for parsing:
-  * [gdc_requests_cases.py](scripts/gdc_requests_cases.py)
-  * [gdc_requests_files.py](scripts/gdc_requests_files.py)
-  * [gdc_write_anno.py](scripts/gdc_write_anno.py)
+#### CHD::request file info from GDC
+* uses JSON request to files and cases endpoints via python
+* identifies files by filter for cases.project.project_id, cases.primary_site, experimental_strategy, and data_category
+* generates a manifest for bulk download with gdc-client and a pheno file for parsing
+* cases endpoint gives submitter_id and disease_type, files endpoint gives rest
+* [gdc_requests_cases.py](scripts/gdc_requests_cases.py)
+* [gdc_requests_files.py](scripts/gdc_requests_files.py)
+* [gdc_write_anno.py](scripts/gdc_write_anno.py)
 
-2. WRP::parse_tcga_info.py hall_tcga_t10b10.tab > hall_tcga_t10b10.file_info
+### WRP::parse_tcga_info.py hall_tcga_t10b10.tab > hall_tcga_t10b10.file_info
 * generates file with following fields: sample_id | sample_type | file_name | file_id
-* for normal, tumor pairs (in that order); not sure how it deals with duplicated samples
+* for normal/tumor pairs (in that order)
+* unclear how it deals with duplicated samples
 
-  * CHD::i should be able to modify parse_tcga_info.py to take as input pheno.tsv and generate samples.file_info
-  * i do so in the follow script and of duplicates i take max sequences:
-  * [parse_gdc_info.py](scripts/parse_gdc_info.py)
+#### CHD::modify parse_tcga_info.py to take as input pheno.tsv and generate samples.file_info
+* i do so in the following script and of duplicates i take max sequences
+* output is coad-read.file_info
+* [parse_gdc_info.py](scripts/parse_gdc_info.py)
 
-3. WRP::nohup ~/ncbi/gdc_download_file_info.sh ~/ncbi/hall_tcga_t61-80.file_info > gdc_down_t61-80.log 2> gdc_down_t61-80.err &
-* bash script feeds file uuid from parse*.py output to gdc-client instead of manifest; this allows more precise download but does not appear to permit the ever-ellusive sbatch download
+### WRP::nohup ~/ncbi/gdc_download_file_info.sh ~/ncbi/hall_tcga_t61-80.file_info > gdc_down_t61-80.log 2> gdc_down_t61-80.err &
+* bash script feeds file uuid from parse*.py output to gdc-client instead of manifest
+* this allows more precise download but does not appear to permit the ever-ellusive sbatch download
 
-  * CHD::i should use the WP download strategy, because i can't use bulk download anyway (not enough storage space)
-  * for the first ten pairs (20 samples):
-  * [gdc_download.bash](scripts/gdc_download.bash)
-  ```
-  dt=`date +"%Y-%m-%d"`
-  nohup bash ~/projects/aneuploidy/scripts/gdc_download.bash > ~/projects/aneuploidy/logs/gdc_download_${dt}.out 2> ~/projects/aneuploidy/logs/gdc_download_${dt}.err &
-  ```
+#### CHD::use WRP download strategy (can't use bulk download anyway due to not enough storage space)
+* first try 9/25/2019 on first ten pairs (20 samples) in coad-read.file_info
+* [gdc_download.bash](scripts/gdc_download.bash)
+```
+dt=`date +"%Y-%m-%d"`
+nohup bash ~/projects/aneuploidy/scripts/gdc_download.bash > ~/projects/aneuploidy/logs/gdc_download_${dt}.out 2> ~/projects/aneuploidy/logs/gdc_download_${dt}.err &
+```
+* seems to have worked
+
+### WRP::move_gdc_tcga_files.py hall_tcga_t10b10 hall_tcga_t10b10.file_info > hall_tcga_t10b10.file_set 2> hall_tcga_t10b10.file_errors
+* `*.file_set` contains: subject_id, normal_file.bam, tumor_file.bam
+
+#### CHD::check and assemble files for analysis
+* [assemble_gdc_files.py](scripts/assemble_gdc_files.py)
+
+### WRP:Identify heterozygous sites and count reads there
+* de-duplication is assumed to have been done by GDC
+* requires a `*.file_set` file to identify samples
+* takes normal_file.bam and runs gatk_haplo.sh via sbatch
+```
+for n in `cut -f 2 hall_tcga_t9b10.file_set`; do sbatch run_gatk_haplo.sh $n ; done
+```
+* run_gatk_haplo.sh does three things:
+  1. bedtools intersect with exome.bed
+  2. samtools index
+  3. java gatk.jar HaplotypeCaller
+* the script takes three input files:
+  1. reference.fa file (UCSC hg38)
+  2. reference exome (from manufacturer, with liftOver from hg19 to hg38)
+  3. bam file (from .file_set)
+* the script generates two output files:
+  1. `*_normal_ed.bam`
+  2. `*.snp.indel.vcf_L`
+```
+start_paired_hets.py hall_tcga_t61.file_set
+```
+* calls find_count_hets_tumor_pair_gdc.sh, which in turn calls find_hetsites.py, count_het_freqs2.py, het_cnts2R.py
+* find_hetsites.py ...
+* count_het_freqs2.py ...
+* het_cnts2R.py ...
+
+#### CHD::gatk_haplo
+* which exome.bed to use: either broad, generic or sample-specific; going to try broad, generic first
+* i downloaded SureSelect Clinical Research Exome V2 (67.3 Mb, hg38) from agilent catalogue...no liftOver required!
+* will use S30409818_Regions.bed as exome reference
+```
+/scratch/chd5n/aneuploidy/exome-kits/SureSelect_CRE_V2_hg38/S30409818_Regions.bed
+```
+* which reference genome.fa to use: either generic latest hg38 from ucsc or GDC-specific; going to try GDC-specific first
+```
+rsync -avzP rsync://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/chromFa.tar.gz .
+rsync -avzP rsync://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/latest/hg38.fa.gz .
+```
+* [Heng Li recommends](http://lh3.github.io/2017/11/13/which-human-reference-genome-to-use):
+* `ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz`
+* [GDC used](https://gdc.cancer.gov/about-data/data-harmonization-and-generation/gdc-reference-files) a combo of Heng Li's rec plus decoys and viruses
+```
+# for Li's
+rsync -avzhP rsync://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz /scratch/chd5n/Reference_genome/ ## took 9 sec
+
+# for GDC (use gdc-client)
+gdc_home=~/Apps/gdc-client/
+dest=/scratch/chd5n/Reference_genome/
+${gdc_home}gdc-client download 254f697d-310d-4d7d-a27b-27fbf767a834 -d ${dest}  ## took 7 sec
+cd ${dest}254f697d-310d-4d7d-a27b-27fbf767a834
+tar xvzf GRCh38.d1.vd1.fa.tar.gz
+# now resides at following path:
+/scratch/chd5n/Reference_genome/GRCh38.d1.vd1.fa
+```
+* run gatk_haplo
+```
+cd ~/projects/aneuploidy/scripts
+file_set=/scratch/chd5n/aneuploidy/raw-data/annotations/coad-read_2019-09-26.file_set
+for file in `cut -f 2 ${file_set}`; do sbatch gatk_haplo.bash ${file}; done
+```
 
 
 ## early thoughts

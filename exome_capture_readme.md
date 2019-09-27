@@ -30,19 +30,21 @@
 ```
 
 ## SeqCap EZ HGSC VCRome
+* 45.1 Mb coverage
 * [roche website](https://sequencing.roche.com/en/products-solutions/by-category/target-enrichment/hybridization/seqcap-ez-hgsc-vcrome.html)
 
 ## SureSelect Human All Exon 38 Mb v2
+* 38 Mb coverage
 * [biostars guidance](https://www.biostars.org/p/57675/)
 * [agilent suredesign website](https://earray.chem.agilent.com/suredesign/index.htm?sessiontimeout=true)
-1. create login and workgroup
-2. find designs > SureSelect > agilent catalog
-
-* earliest in online catalogue is SureSelect Human All Exon V4
+  1. create login and workgroup
+  2. find designs > SureSelect > agilent catalog
+* earliest in online catalogue is SureSelect Human All Exon V4, which has 51 Mb coverage (hg19)
 * emailed informatics_support@agilent.com for V2 on 9/24/2019
 * Mandar Bedse responded with S0293689_Covered.bed for V2
 * we want the "regions" bed file as the primary target file; the covered file is the bait
-* for V4, regions and covered are the same, so it may not matter
+* for V4, regions and covered are the same
+* Mandar Bedse confirmed that regions and covered are same for V2 as well 9/25/2019
 
 ### login info
 * login: chd5n@virginia.edu
@@ -55,12 +57,14 @@
 2. [biostars 2](https://www.biostars.org/p/220939/)
 
 ## Gapfiller_7m
+* 7 Mb coverage
 * Nimblegen, Roche technical support inquiry placed 9/24/2019
 * [obscure lecture website](https://www.lanl.gov/conferences/finishfuture/pdfs/2012%20talks/sfaf12-muzny.pdf)
 * Muzny talk from 2012 acknowledges TCGA exome gapfiller design with 7Mb genomic region targeted (10,200 genes)
 * email sent to questions@hgsc.bcm.tmc.edu on 9/24/2019
 
 ## SeqCap EZ Human Exome Library v2.0
+* can only find V3, 64 Mb coverage, hg19
 * [website for v3.0](https://sequencing.roche.com/en/products-solutions/by-category/target-enrichment/hybridization/seqcap-ez-exome-v3-kit.html)
 
 ## Custom V2 Exome Bait, 48 RXN X 16 tubes
@@ -73,8 +77,20 @@
 * targetIntervals is the file to use (as opposed to baitIntervals)
 
 ## Plan
-* create GRCh38 exome references with liftOver
+* create hg38 exome references with liftOver
 * assume all baseline references are hg19
+* alternative: download current exome capture reference file with hg38
+* [agilent suredesign website](https://earray.chem.agilent.com/suredesign/index.htm?sessiontimeout=true)
+* login: chd5n@virginia.edu
+* password: 1surepass
+* workgroup: tcga
+* tech support password: 1Surepass!
+* SureSelect Human All Exon V7: 48.2 Mb
+* SureSelect Clinical Research Exome V2: 67.3 Mb *i like this one*
+* SureSelect Human All Exon V6+UTR r2: 91 Mb
+* SureSelect Human All Exon V6 r2: 60 Mb
+* SureSelect Human All Exon V6+COSMIC r2: 66 Mb
+
 
 ```
 kit_path = '/scratch/chd5n/aneuploidy/exome-kits/'
