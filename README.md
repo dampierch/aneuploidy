@@ -58,7 +58,7 @@ for n in `cut -f 2 hall_tcga_t9b10.file_set`; do sbatch run_gatk_haplo.sh $n ; d
   2. samtools index
   3. java gatk.jar HaplotypeCaller
 * the script takes three input files:
-  1. reference.fa file (UCSC hg38)
+  1. reference.fa file (UCSC hg38; requires dict and index)
   2. reference exome (from manufacturer, with liftOver from hg19 to hg38)
   3. bam file (from .file_set)
 * the script generates two output files:
@@ -68,9 +68,22 @@ for n in `cut -f 2 hall_tcga_t9b10.file_set`; do sbatch run_gatk_haplo.sh $n ; d
 start_paired_hets.py hall_tcga_t61.file_set
 ```
 * calls find_count_hets_tumor_pair_gdc.sh, which in turn calls find_hetsites.py, count_het_freqs2.py, het_cnts2R.py
-* find_hetsites.py ...
-* count_het_freqs2.py ...
-* het_cnts2R.py ...
+* find_hetsites.py does three things:
+  1. reads normal sample vcf
+  2. selects variant positions with AF=0.5 and good depth
+  3. writes bed file with position of baseline heterozygous sites
+  4. output: `*_het.bed`
+  5. fields: `'CHROM', 'POS0', 'POS', 'name', 'QUAL', 'strand', 'info_str'`
+* count_het_freqs2.py does three things:
+  1. reads an unfiltered bam file (tumor or normal)
+  2. reads bed file `*_het.bed` with position of baseline (i.e. normal) heterozygous sites
+  3. writes vcf-like output with allele counts in bam file (tumor or normal) at each location in bed file
+  4. output: `*.het_cnts2`
+  5. the allele counts for the normal bam may be redundant w/r/t the `*.snp.indel.vcf_L` allele counts...we will see
+* het_cnts2R.py does two things:
+  1. reads allele counts at heterozygous locations in tumor and normal `*.het_cnts2`
+  2. prepares allele count information for easy input into R
+  3. output: `out_fields = ['sample', 'chrom', 'pos', 't_type', 'ref', 'ref_cnt', 'alt', 'alt_cnt', 'fract']`
 
 #### CHD::gatk_haplo
 * which exome.bed to use: either broad, generic or sample-specific; going to try broad, generic first
@@ -100,12 +113,61 @@ tar xvzf GRCh38.d1.vd1.fa.tar.gz
 # now resides at following path:
 /scratch/chd5n/Reference_genome/GRCh38.d1.vd1.fa
 ```
-* run gatk_haplo
+* create dict and index for reference genome
+* run gatk_haplo...would prefer to make this a python script with a shell subprocess...
 ```
 cd ~/projects/aneuploidy/scripts
 file_set=/scratch/chd5n/aneuploidy/raw-data/annotations/coad-read_2019-09-26.file_set
 for file in `cut -f 2 ${file_set}`; do sbatch gatk_haplo.bash ${file}; done
 ```
+* output is vcf_L (TCGA-A6-5661-10A-01D-1650-10_Illumina_gdc_realn is large outlier)
+```
+#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  TCGA-T9-A92H-10A-01D-A370-10
+chr1    17385   .       G       A       176.77  .       AC=1;AF=0.500;AN=2;BaseQRankSum=-2.255;ClippingRankSum=0.000;DP=39;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.500;MQ=39.04;MQRankSum=-1.732;QD=4.53;ReadPosRankSum=0.201;SOR=0.099       GT:AD:DP:GQ:PL  0/1:30,9:39:99:205,0,1033
+chr1    69511   .       A       G       3492.77 .       AC=2;AF=1.00;AN=2;DP=164;ExcessHet=3.0103;FS=0.000;MLEAC=2;MLEAF=1.00;MQ=35.95;QD=21.83;SOR=1.565       GT:AD:DP:GQ:PL  1/1:0,160:160:99:3521,463,0
+
+## INFO README
+AC=allele count in genotypes, for each alt allele
+AF=allele freq, for each alt allele (theoretical)
+AN=total number of alleles (always 2 in this set)
+DP=approx read depth, some reads filtered
+DS=any downsampling?
+MLEAC=max likelihood expectation for allele count, for each alt allele
+MLEAF=max likelihood expectation for allele freq, for each alt allele
+
+## FORMAT README
+GT=genotype 0/1
+AD=allelic depths for ref/alt alleles 30,9
+DP=approx read depth 39 (sum of allelic depths)
+GQ=genotype quality 99
+PL=normalized, phred-scaled likelihoods for genotypes 205,0,1033
+```
+* [1000G reference page for genotype format in vcf](https://www.internationalgenome.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-40/)
+* AF is theoretical based on called genotype, so always 0.5 or 1; empirical genotype can be calculated from AD field
+* homozygous genotypes are sometimes called even with reads supporting heterozygosity; presumably based on read and alignment quality
+
+```
+cut -f 8 TCGA-T9-A92H-10A-01D-A370-10_Illumina_gdc_realn.snp.indel.vcf_L | awk -v FS=";" 'NR>2807 {print $2}' | sort | uniq -c | less
+22058 AF=0.500
+   72 AF=0.500,0.500
+10580 AF=1.00
+
+cut -f 8 TCGA-A6-2680-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L | awk -v FS=";" 'NR>2807 {print $2}' | sort | uniq -c | less
+22664 AF=0.500
+   44 AF=0.500,0.500
+11304 AF=1.00
+
+cut -f 8 TCGA-A6-2680-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L | awk -v FS=";" 'NR>2807 {print $3}' | sort | uniq -c | less
+awk -v FS="\t" 'NR>2807 {print $0}' TCGA-A6-2680-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L | less
+grep 'AF=1.00' TCGA-A6-2680-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L | cut -f 10 | awk -v FS=":" '{print $2}' | sort | uniq -c | less
+```
+
+#### CHD::allele counts with start_paired_hets
+* start_paired_hets.py `*.file_set`
+* find_count_hets_tumor_pair_gdc.sh
+* find_hetsites.py
+* count_het_freqs2.py
+* het_cnts2R.py
 
 
 ## early thoughts
