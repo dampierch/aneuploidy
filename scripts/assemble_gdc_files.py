@@ -71,12 +71,17 @@ with open(output_file, 'w+') as out_f:
                                 sub[flag] = file
         ## make sure both halves of pair are available
         ## if so, move them to data crunch path
+        ## move bai also for pysam pileup in count_hetalleles.py
         if 'have_normal' in sub and 'have_tumor' in sub:
             out_f.write('\t'.join([subject_id, sub['have_normal']['name'], sub['have_tumor']['name']]) + '\n')
-            cmd_n = 'mv %s/%s %s' % (download_path + sub['have_normal']['uuid'], sub['have_normal']['name'], crunch_path)
-            cmd_t = 'mv %s/%s %s' % (download_path + sub['have_tumor']['uuid'], sub['have_tumor']['name'], crunch_path)
-            subprocess.call(cmd_n, shell=True)
-            subprocess.call(cmd_t, shell=True)
+            cmd_n_bam = 'mv %s/%s %s' % (download_path + sub['have_normal']['uuid'], sub['have_normal']['name'], crunch_path)
+            cmd_n_bai = 'mv %s/%s %s' % (download_path + sub['have_normal']['uuid'], sub['have_normal']['name'].split('.')[0] + '.bai', crunch_path)
+            cmd_t_bam = 'mv %s/%s %s' % (download_path + sub['have_tumor']['uuid'], sub['have_tumor']['name'], crunch_path)
+            cmd_t_bai = 'mv %s/%s %s' % (download_path + sub['have_tumor']['uuid'], sub['have_tumor']['name'].split('.')[0] + '.bai', crunch_path)
+            subprocess.call(cmd_n_bam, shell=True)
+            subprocess.call(cmd_n_bai, shell=True)
+            subprocess.call(cmd_t_bam, shell=True)
+            subprocess.call(cmd_t_bai, shell=True)
         else:
             if 'have_normal' not in sub:
                 problems.append('%s missing normal\n' % (subject_id))
@@ -105,3 +110,21 @@ with open(error_file, 'w+') as out_f:
 #         cmd_t = 'mv %s %s/' % (crunch_path + sub['have_tumor']['name'], download_path + sub['have_tumor']['uuid'])
 #         subprocess.call(cmd_n, shell=True)
 #         subprocess.call(cmd_t, shell=True)
+
+
+## to move bai files in case miss that part
+
+# for subject_id in subject_list:
+#     sub = subject_set[subject_id]
+#     for tissue_type in ('normal','tumor'):
+#         if tissue_type in sub:
+#             flag = 'have_' + tissue_type
+#             for file in sub[tissue_type]:
+#                 if os.path.exists(crunch_path + file['name']):
+#                     if flag not in sub:
+#                         sub[flag] = file
+#     if 'have_normal' in sub and 'have_tumor' in sub:
+#         cmd_n_bai = 'mv %s/%s %s' % (download_path + sub['have_normal']['uuid'], sub['have_normal']['name'].split('.')[0] + '.bai', crunch_path)
+#         cmd_t_bai = 'mv %s/%s %s' % (download_path + sub['have_tumor']['uuid'], sub['have_tumor']['name'].split('.')[0] + '.bai', crunch_path)
+#         subprocess.call(cmd_n_bai, shell=True)
+#         subprocess.call(cmd_t_bai, shell=True)

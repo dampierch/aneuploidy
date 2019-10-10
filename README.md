@@ -42,6 +42,7 @@ nohup bash ~/projects/aneuploidy/scripts/gdc_download.bash > ~/projects/aneuploi
 
 ### WRP::move_gdc_tcga_files.py hall_tcga_t10b10 hall_tcga_t10b10.file_info > hall_tcga_t10b10.file_set 2> hall_tcga_t10b10.file_errors
 * `*.file_set` contains: subject_id, normal_file.bam, tumor_file.bam
+* need to move bai files as well...later pysam will need them
 
 #### CHD::check and assemble files for analysis
 * [assemble_gdc_files.py](scripts/assemble_gdc_files.py)
@@ -114,7 +115,9 @@ tar xvzf GRCh38.d1.vd1.fa.tar.gz
 /scratch/chd5n/Reference_genome/GRCh38.d1.vd1.fa
 ```
 * create dict and index for reference genome
-* run gatk_haplo...would prefer to make this a python script with a shell subprocess...
+* run gatk_haplo
+  1. [run_gatk_haplo.py](scripts/run_gatk_haplo.py)
+  2. [gatk_haplo.bash](scripts/gatk_haplo.bash)
 ```
 cd ~/projects/aneuploidy/scripts
 file_set=/scratch/chd5n/aneuploidy/raw-data/annotations/coad-read_2019-09-26.file_set
@@ -163,12 +166,18 @@ grep 'AF=1.00' TCGA-A6-2680-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L |
 ```
 
 #### CHD::allele counts with start_paired_hets
-* start_paired_hets.py `*.file_set`
-* find_count_hets_tumor_pair_gdc.sh
-* find_hetsites.py
-* count_het_freqs2.py
-* het_cnts2R.py
+* start_paired_hets.py `*.file_set` :: see [run_het_counter.py](scripts/run_het_counter.py)
+* find_count_hets_tumor_pair_gdc.sh :: see [het_counter.sh](scripts/het_counter.sh)
+* find_hetsites.py :: see [find_hetsites.py](scripts/find_hetsites.py)
+* count_het_freqs2.py :: see [count_hetalleles.py](scripts/count_hetalleles.py)...
+  1. do not understand how this works...if pileupcolumn.pos != zero_based_pos:...seems like it loses information
+  2. ## does not report when there are large numbers of other counts -- should probably check/report that ... i think this is what errors are reporting
+  3. why might counts differ from AD as reported in vcf for normal?
+* het_cnts2R.py :: see [hetcnts_2R.py](scripts/hetcnts_2R.py) ...
 
+
+### smallest file in test set
+/scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/TCGA-AF-3400-01A-01D-1989-10_gapfillers_Illumina_gdc_realn.bam
 
 ## early thoughts
 
