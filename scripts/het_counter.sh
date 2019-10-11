@@ -4,7 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=5000
+#SBATCH --mem=2000
 #SBATCH --time=1:00:00
 #SBATCH --partition=standard
 #SBATCH --account=chd5n_alloc
@@ -22,7 +22,7 @@
 ## downstream processing in R
 ##
 ## find_hetsites and count_hetalleles appear to use minimal time/mem
-## first 10 samples each took <10 min <1GB mem
+## first 10 samples took between 8 min and 52 min; max ~55 MB
 
 
 module load anaconda/5.2.0-py3.6
@@ -38,16 +38,20 @@ echo starting `date`
 echo $1 `echo $2 | awk -v FS="/" '{print $NF}'` `echo $3 | awk -v FS="/" '{print $NF}'`
 
 ## find het sites
+echo start finding hetsites `date`
 ${script_dir}find_hetsites.py ${normal_pre}.${vcf_suf} > ${normal_pre}_hetsites.bed
-wait
+echo done finding hetsites `date`
 
-## get emperical allele freq
-${script_dir}count_hetalleles.py --bam ${2} --hetsites_bed ${normal_pre}_hetsites.bed > ${crunch_dir}${subject_id}_normal_hetcnts.tsv 2>${crunch_dir}${subject_id}_normal.err_cnts
-${script_dir}count_hetalleles.py --bam ${3} --hetsites_bed ${normal_pre}_hetsites.bed > ${crunch_dir}${subject_id}_tumor_hetcnts.tsv 2>${crunch_dir}${subject_id}_tumor.err_cnts
-wait
+## get emperical allele counts
+echo start counting alleles `date`
+${script_dir}count_hetalleles.py --bam ${2} --hetsites_bed ${normal_pre}_hetsites.bed > ${crunch_dir}${subject_id}_normal_hetcnts.bed 2>${crunch_dir}${subject_id}_normal_errcnts.bed
+${script_dir}count_hetalleles.py --bam ${3} --hetsites_bed ${normal_pre}_hetsites.bed > ${crunch_dir}${subject_id}_tumor_hetcnts.bed 2>${crunch_dir}${subject_id}_tumor_errcnts.bed
+echo done counting alleles `date`
 
 ## prepare data for R
-# ${script_dir}hetcnts_2R.py --sample_only ${subject_id}
+echo start preparing R data `date`
+${script_dir}hetcnts_2R.py --subject ${subject_id} --normal_hetcnts_bed ${crunch_dir}${subject_id}_normal_hetcnts.bed --tumor_hetcnts_bed ${crunch_dir}${subject_id}_tumor_hetcnts.bed
+echo done preparing R data `date`
 
 echo `date` :: ${base_name} done
 echo "seff ${SLURM_JOBID}"

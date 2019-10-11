@@ -2,18 +2,22 @@
 
 ## find_hetsites.py :: input VCF :: output BED
 
+    # from within het_counter.sh
     # usage: find_hetsites.py *.vcf > *_hetsites.bed
 
     # this script takes tab-delim output from gatk_haplo.bash (*.vcf_L) and
     # extracts positions of SNP alt alleles with AF=0.500 && sufficient read depth;
     # writes bed with location, AF, alleles
 
+
 import fileinput
 import re
+
 
 qual_thresh = 100
 dp_thresh = 100
 out_fields = ('CHROM', 'POS0', 'POS', 'name', 'QUAL', 'strand', 'info_str')
+
 
 def allele_info(data, genotype, alt_only):
     '''
@@ -30,6 +34,7 @@ def allele_info(data, genotype, alt_only):
     else:
         out_str = "AD::%s=%s,%s=%s" % (data['REF'],allele_cnts[0],data['ALT'],allele_cnts[1])
     return out_str
+
 
 with fileinput.input() as in_f:
     for in_line in in_f:

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-## count_hetalleles.py :: input raw bam + normal hetsites bed :: output TSV
+## count_hetalleles.py :: input raw bam + normal hetsites bed :: output hetsites bed with observed (simple) allele counts
 
-    # usage: count_hetalleles.py --bam [normal/tumor].bam --hetsites_bed normal_hetsites.bed > subject_[normal/tumor]_hetcnts.tsv 2> subject_[normal/tumor].err_cnts
+    # from within het_counter.sh
+    # usage: count_hetalleles.py --bam [normal/tumor].bam --hetsites_bed normal_hetsites.bed > subject_[normal/tumor]_hetcnts.bed 2> subject_[normal/tumor].err_cnts
 
     # this script takes a bam file and a bed file with hetsites in the normal
     # exome sequences and extracts from the bam allele counts at each hetsite;
@@ -85,6 +86,7 @@ args = parser.parse_args()
 ## open bamfile for reading bases at location
 bamfile = pysam.AlignmentFile(args.bam_file,'rb')
 
+
 ## scan bed file of heterozygous sites
 with open(args.hetsites_bed_file,'r') as in_f:
     for in_line in in_f:
@@ -97,18 +99,19 @@ with open(args.hetsites_bed_file,'r') as in_f:
         alleles = get_alleles(bamfile,data['chrom'],int(data['start']))
         ## get observed allele counts
         (counts, known_total, all_total) = allele_counts(alleles,known_dict)
-
-        ## for x in known_alleles only returns counts for alleles in vcf reference file
-        ## does not report when there are large numbers of other counts -- should probably check/report that
-
-        if known_total/all_total > 0.8:
-            allele_str = "SD::" + ','.join(["%s=%d"%(x,counts[x]) for x in known_alleles])
+        ## check for large counts of unknown alleles or absent locations
+        if all_total > 0 and known_total/all_total > 0.8:
+            allele_str = "SD::" + ','.join(["%s=%d"%(x,counts[x]) for x in known_alleles])  ## SD is simple allele depth by counting aligned reads from bam
             print(";".join((in_line,allele_str)))
         else:
             allele_str = "BAD::" + ','.join(["%s=%d"%(x,counts[x]) for x in bases])
             sys.stderr.write('%s;%s ***\n'%(in_line,allele_str))
 
+
+## close bamfile once alleles counted
 bamfile.close()
+
+
 
 
 ### testing
