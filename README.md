@@ -85,6 +85,7 @@ start_paired_hets.py hall_tcga_t61.file_set
   1. reads allele counts at heterozygous locations in tumor and normal `*.het_cnts2`
   2. prepares allele count information for easy input into R
   3. output: `out_fields = ['sample', 'chrom', 'pos', 't_type', 'ref', 'ref_cnt', 'alt', 'alt_cnt', 'fract']`
+* het_cnts2R_n.py does a better job of checking to ensure that the same chromosome positions are being merged
 
 #### CHD::gatk_haplo
 * which exome.bed to use: either broad, generic or sample-specific; going to try broad, generic first
@@ -172,6 +173,21 @@ grep 'AF=1.00' TCGA-A6-2680-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L |
 * count_het_freqs2.py :: see [count_hetalleles.py](scripts/count_hetalleles.py)
   1. do not understand how this works...if pileupcolumn.pos != zero_based_pos:...seems like it loses information
 * het_cnts2R.py :: see [hetcnts_2R.py](scripts/hetcnts_2R.py) ... requires a little more work
+
+
+### wrp::plots (people.virginia.edu/~wrp/pts_allelefreqplots)
+* these scripts require an 'hg38.chr1-XY.sizes_cumm' file with cummulative chromosome lengths
+* `Rscript --vanilla plot_haplo_gg_chrom2.R $n` -- plot two panel histogram (density) and one-panel chromosome plot  -- try this first
+* `plot_karyo_gg_list.R`   -- plot using a file with a list of TCGA id's
+* `plot_karyo_gg.R`        -- plot an individual TCGA id
+
+
+        R --no-save --vanilla TCGA_Sample1234.Rdata  will write TCGA_Sample1234_gg_chrom2b.pdf
+
+        For more detailed karyotype plots:
+
+        plot_karyo_gg_list.R    -- plot a karyoploteR plot from a file of TCGA IDs
+        plot_karyo_gg.R         -- plot a karyoploteR plot from a file of TCGA IDs
 
 
 ### smallest file in test set
