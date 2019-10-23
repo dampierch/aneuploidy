@@ -43,17 +43,25 @@ def get_known_alleles(info_str):
 def get_alleles(bamfile, chrom, zero_based_pos):
     '''
     Return a list of alleles observed in the reads aligned at a locus of
-    interest defined by chrom and one_based_pos
+    interest defined by chrom and one_based_pos.
+
+    The pileup call initiates an iterator over each position (i.e. column)
+    in the set of positions (columns) composed of all positions in all reads
+    that overlap the position of interest specified in the pileup call.
+
+    i.e. (1) start with all reads that overlap a given position (2) take the
+    union of all unique positions in that set of reads (3) iterate over each
+    of those positions and capture all reads from step (1) that overlap
     '''
     alleles_at_pos = []
-    for pileupcolumn in bamfile.pileup(chrom, zero_based_pos, zero_based_pos + 1):
-        for pileupread in pileupcolumn.pileups:
-            ## pysam includes all positions from all alignments that
-            ## overlap the locus of interest, so you have to exclude
-            ## loci that you don't care about
-            if pileupcolumn.pos != zero_based_pos:
-                continue
-            ## query allele is None if is_del or is_refskip is set.
+    for pileupcolumn in bamfile.pileup(chrom, zero_based_pos, zero_based_pos + 1):  ## iterator over each reference position (i.e. column)
+        ## pysam includes all positions from all alignments that overlap the
+        ## ref position of interest, so we exclude all positions different
+        ## from the one of interest
+        if pileupcolumn.reference_pos != zero_based_pos:
+            continue
+        for pileupread in pileupcolumn.pileups:  ## iterator over each read overlapping given position (i.e. column)
+            ## query_position is None if is_del or is_refskip is set
             if not pileupread.is_del and not pileupread.is_refskip:
                 aligned_read_allele = pileupread.alignment.query_sequence[pileupread.query_position]
                 alleles_at_pos.append(aligned_read_allele)
@@ -117,11 +125,31 @@ bamfile.close()
 ### testing
 # bamfile = pysam.AlignmentFile('/scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/TCGA-AF-3400-01A-01D-1989-10_gapfillers_Illumina_gdc_realn.bam','rb')
 # bamfile = pysam.AlignmentFile('/scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/TCGA-AF-3400-11A-01D-1554-10_Illumina_gdc_realn.bam','rb')
+
 # in_line = [data[field] for field in out_fields]
 # d1 = dict(list(zip(field_names,in_line)))
 # known_alleles, known_dict = get_known_alleles(d1['info'])
 # alleles = get_alleles(bamfile,d1['chrom'],int(d1['start']))
 #
+
+field_names = ('chrom','start','stop','type','score','strand','info')
+bamfile = pysam.AlignmentFile('/scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/TCGA-T9-A92H-10A-01D-A370-10_Illumina_gdc_realn.bam','rb')
+with open('/scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/TCGA-T9-A92H-10A-01D-A370-10_Illumina_gdc_realn_hetsites.bed') as in_f:
+    for in_line in in_f:
+        in_line = in_line.strip('\n')
+        ## get het site positions
+        data = dict(list(zip(field_names,in_line.split('\t'))))
+        ## get known alleles, func returns a list with the major, then minor allele, but not the counts
+        known_alleles, known_dict = get_known_alleles(data['info'])  ## returns known_alleles, known_dict
+        ## get observed alleles in bam, func returns a list of alleles at given chrom + position
+        alleles = get_alleles(bamfile,data['chrom'],int(data['start']))  ## this takes a long time
+        ## get observed allele counts
+        (counts, known_total, all_total) = allele_counts(alleles,known_dict) ...
+
+
+
+
+
 #
 # limit = 30
 # it = 0
@@ -139,3 +167,15 @@ bamfile.close()
 # for read in h:
 #     print(read)
 # f.close()
+
+
+
+## notes on pileup
+## given a position in the setting of 101 bp reads, the union of all positions in
+## all reads overlapping the given position will extend about 100 bases down- and
+## upstream of the position, resulting in about 201 columns across all reads
+## overlapping a given genomic position
+##
+## also, nsegments will give all reads overlapping a position, including lower
+## quality (at given position) read mates that are filtered out by default in
+## the pileup call (unless ignore_overlaps=False); so len(pileups) != nsegments
