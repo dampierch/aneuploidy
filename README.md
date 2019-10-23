@@ -169,9 +169,8 @@ grep 'AF=1.00' TCGA-A6-2680-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L |
 #### CHD::allele counts with start_paired_hets
 * start_paired_hets.py `*.file_set` :: see [run_het_counter.py](scripts/run_het_counter.py)
 * find_count_hets_tumor_pair_gdc.sh :: see [het_counter.sh](scripts/het_counter.sh)
-* find_hetsites.py :: see [find_hetsites.py](scripts/find_hetsites.py)
-* count_het_freqs2.py :: see [count_hetalleles.py](scripts/count_hetalleles.py)
-  1. starting to understand how pysam pileups work; resume interrogation at allele_counts() ...
+* find_hetsites.py :: see [find_hetsites.py](scripts/find_hetsites.py); includes modification to accommodate genotypes without reference allele
+* count_het_freqs2.py :: see [count_hetalleles.py](scripts/count_hetalleles.py); includes modification for more intuitive loop over pileupcolumns
 * het_cnts2R.py :: see [hetcnts_2R.py](scripts/hetcnts_2R.py) ... requires a little more work
 
 

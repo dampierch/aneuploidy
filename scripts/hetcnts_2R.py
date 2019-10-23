@@ -3,13 +3,13 @@
 ## hetcnts_2R.py :: input subject_[normal/tumor]_hetcnts.bed :: output TSV
 
     # from within het_counter.sh
-    # usage: hetcnts_2R.py --sample_only ${subject_id}
+    # usage: hetcnts_2R.py --sample_only ${subject_id} --normal_hetcnts_bed ${crunch_dir}${subject_id}_normal_hetcnts.bed --tumor_hetcnts_bed ${crunch_dir}${subject_id}_tumor_hetcnts.bed
 
     # this script takes bed files with simple allele counts at heterozygous
     # sites from normal and tumor bed files, then writes allele counts to file
     # for R to process
 
-    # fields: chr pos t_status ref ref_cnt alt alt_cnt fract
+    # fields: chr pos t_status maj maj_cnt min min_cnt fract
 
     # this script ensures no loss of phasing (same location in both tumor/normal)
 
@@ -24,6 +24,17 @@ seq_home = data_home + 'raw-data/sequencing/'
 crunch_path = seq_home + 'crunch/'
 in_fields = ['chrom', 'pos0', 'pos', 'an_type', 'score', 'strand', 'info_str']
 out_fields = ['subject_id', 'chrom', 'pos', 't_type', 'maj', 'maj_cnt', 'min', 'min_cnt', 'fract']
+
+
+def get_hetcnts_list(file_name, tissue_type):
+    data_list = []
+    with open(file_name,'r') as in_f:
+        for in_line in in_f:
+            data = dict(list(zip(in_fields,in_line.strip('\n').split('\t'))))
+            data['t_type'] = tissue_type
+            data['subject_id'] = args.subject_id
+            data_list.append(data)
+    return data_list
 
 
 def parse_info(info_str):
@@ -77,21 +88,9 @@ def print_het_cnts(out_f, data, out_fields):
 
 def main(args):
     ## prepare normal data as list of dicts
-    norm_data = []
-    with open(args.normal_hetcnts_bed, 'r') as in_f:
-        for in_line in in_f:
-            data = dict(list(zip(in_fields,in_line.strip('\n').split('\t'))))
-            data['t_type'] = 'norm'
-            data['subject_id'] = args.subject_id
-            norm_data.append(data)
+    norm_data = get_hetcnts_list(args.normal_hetcnts_bed, 'norm')
     ## prepare tumor data as list of dicts
-    tumor_data = []
-    with open(args.tumor_hetcnts_bed, 'r') as in_f:
-        for in_line in in_f:
-            data = dict(list(zip(in_fields,in_line.strip('\n').split('\t'))))
-            data['t_type'] = 'tumor'
-            data['subject_id'] = args.subject_id
-            tumor_data.append(data)
+    tumor_data = get_hetcnts_list(args.tumor_hetcnts_bed, 'tumor')
     ## setup output
     with open(crunch_path + args.subject_id + '_cnts2R.tsv', 'w') as out_f:
         out_f.write('\t'.join(out_fields)+'\n')
@@ -138,25 +137,32 @@ if __name__ == '__main__':
 
 ######### TESTING
 
-# parser=argparse.ArgumentParser()
-# parser.add_argument('--sample_only',help='infer sample_normal, sample_tumor names',action='store_true',default=False)
-# parser.add_argument('in_files', metavar='FILE', nargs='*')
-# args=parser.parse_args('--sample_only TCGA-T9-A92H'.split())
-#
-# args = parser.parse_args('--subject TCGA-T9-A92H --normal_hetcnts_bed /scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/TCGA-T9-A92H_normal_hetcnts.bed --tumor_hetcnts_bed /scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/TCGA-T9-A92H_tumor_hetcnts.bed'.split())
-#
-# norm_data = []
-# with open(args.normal_hetcnts_bed, 'r') as in_f:
-#     for in_line in in_f:
-#         data = dict(list(zip(in_fields,in_line.strip('\n').split('\t'))))
-#         data['t_type'] = 'norm'
-#         data['subject_id'] = args.subject_id
-#         norm_data.append(data)
-#
-# tumor_data = []
-# with open(args.tumor_hetcnts_bed, 'r') as in_f:
-#     for in_line in in_f:
-#         data = dict(list(zip(in_fields,in_line.strip('\n').split('\t'))))
-#         data['t_type'] = 'tumor'
-#         data['subject_id'] = args.subject_id
-#         tumor_data.append(data)
+parser = argparse.ArgumentParser()
+parser.add_argument('--subject_id',help='subject_id to be analyzed',action='store',dest='subject_id',default=False)
+parser.add_argument('--normal_hetcnts_bed',help='path to normal hetcnts bed file',action='store',dest='normal_hetcnts_bed',default=False)
+parser.add_argument('--tumor_hetcnts_bed',help='path to tumor hetcnts bed file',action='store',dest='tumor_hetcnts_bed',default=False)
+args = parser.parse_args('--subject TCGA-T9-A92H --normal_hetcnts_bed /scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/TCGA-T9-A92H_normal_hetcnts.bed --tumor_hetcnts_bed /scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/TCGA-T9-A92H_tumor_hetcnts.bed'.split())
+
+norm_data = get_hetcnts_list(args.normal_hetcnts_bed, 'norm')
+tumor_data = get_hetcnts_list(args.tumor_hetcnts_bed, 'tumor')
+
+## confirm that both sets of data have same coordinates
+tx = 0
+for norm_d in norm_data:
+    tumor_d = tumor_data[tx]
+    rel_pos = same_pos(norm_d, tumor_d)
+
+a_data = norm_d
+b_data = tumor_d
+if a_data['chrom'] == b_data['chrom'] and int(a_data['pos']) == int(b_data['pos']):
+    return 0
+elif a_data['chrom'] == b_data['chrom']:
+    if int(a_data['pos']) < int(b_data['pos']):
+        return -1
+    else:
+        return 1
+else:
+    if (a_data['chrom'] < b_data['chrom']):
+        return -1
+    else:
+        return 1
