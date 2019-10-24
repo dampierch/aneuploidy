@@ -23,6 +23,7 @@
 ##
 ## find_hetsites and count_hetalleles appear to use minimal time/mem
 ## first 10 samples took between 8 min and 52 min; max ~55 MB
+## hetcnts_2R.py uses no detectable memory, takes 1 sec per sample
 
 
 module load anaconda/5.2.0-py3.6

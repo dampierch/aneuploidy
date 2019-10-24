@@ -166,27 +166,24 @@ awk -v FS="\t" 'NR>2807 {print $0}' TCGA-A6-2680-11A-01D-1554-10_Illumina_gdc_re
 grep 'AF=1.00' TCGA-A6-2680-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L | cut -f 10 | awk -v FS=":" '{print $2}' | sort | uniq -c | less
 ```
 
-#### CHD::allele counts with start_paired_hets
+#### CHD::allele counts
 * start_paired_hets.py `*.file_set` :: see [run_het_counter.py](scripts/run_het_counter.py)
 * find_count_hets_tumor_pair_gdc.sh :: see [het_counter.sh](scripts/het_counter.sh)
 * find_hetsites.py :: see [find_hetsites.py](scripts/find_hetsites.py); includes modification to accommodate genotypes without reference allele
 * count_het_freqs2.py :: see [count_hetalleles.py](scripts/count_hetalleles.py); includes modification for more intuitive loop over pileupcolumns
-* het_cnts2R.py :: see [hetcnts_2R.py](scripts/hetcnts_2R.py) ... requires a little more work
+* het_cnts2R.py :: see [hetcnts_2R.py](scripts/hetcnts_2R.py); includes minor modification with get_hetcnts_list function
+* must remember to make scripts executable with `#!/usr/bin/env python3` at top and `chmod +x` at unix command line
 
 
-### wrp::plots (people.virginia.edu/~wrp/pts_allelefreqplots)
-* these scripts require an 'hg38.chr1-XY.sizes_cumm' file with cummulative chromosome lengths
+### wrp::plots
+* these scripts require an 'hg38.chr1-XY.sizes_cumm' file with cumulative chromosome lengths
 * `Rscript --vanilla plot_haplo_gg_chrom2.R $n` -- plot two panel histogram (density) and one-panel chromosome plot  -- try this first
-* `plot_karyo_gg_list.R`   -- plot using a file with a list of TCGA id's
-* `plot_karyo_gg.R`        -- plot an individual TCGA id
+* `plot_karyo_gg_list.R`   -- plot using a file with a list of TCGA id's, makes karyoploteR plot
+* `plot_karyo_gg.R`        -- plot an individual TCGA id, makes karyoploteR plot
 
 
-        R --no-save --vanilla TCGA_Sample1234.Rdata  will write TCGA_Sample1234_gg_chrom2b.pdf
-
-        For more detailed karyotype plots:
-
-        plot_karyo_gg_list.R    -- plot a karyoploteR plot from a file of TCGA IDs
-        plot_karyo_gg.R         -- plot a karyoploteR plot from a file of TCGA IDs
+#### CHD::plots
+* plot_haplo_gg_chrom2r.R :: see [plot_haplo_chrom.R](scripts/plot_haplo_chrom.R)... almost there
 
 
 ### smallest file in test set
