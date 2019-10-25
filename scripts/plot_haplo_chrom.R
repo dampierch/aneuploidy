@@ -17,22 +17,39 @@ data_dir <- paste0(proj_home,"raw-data/")
 seq_dir <- paste0(data_dir,"sequencing/")
 crunch_dir <- paste0(seq_dir,"crunch/")
 plot_dir <- paste0(proj_home,"results/plots/")
+anno_dir <- paste0(data_dir,"annotations/")
+
+args <- commandArgs(trailingOnly=TRUE)
+if (any(grepl("file_set", args))) {
+  set_name <- args[grep("file_set",args)]
+} else {
+  subjects <- args[2:length(args)]
+}
 
 ## load cumulative lengths
-setwd(ref_dir)
-file <- "GRCh38.d1.vd1.chr1-XY.size.tsv"
-hg38.offsets <- read.table(file=file,sep="\t",header=FALSE,col.names=c('chrom','len','cum_len'))
+file <- paste0(ref_dir,"GRCh38.d1.vd1.chr1-XY.size.tsv")
+hg38.offsets <- read.table(file=file,sep="\t",header=FALSE,col.names=c("chrom","len","cum_len"))
 hg38.offsets$chrom <- factor(hg38.offsets$chrom,levels=unique(as.character(hg38.offsets$chrom))) ## puts chrom in order
 row.names(hg38.offsets) <- levels(hg38.offsets$chrom)
 
-## load heterozygous site allele fractions
-  ## if want to do from command line, could use:
-  #args = commandArgs(trailingOnly=TRUE)
-  #file<-args[1]
-setwd(crunch_dir)
-file <- "TCGA-T9-A92H_cnts2R.tsv"
-slabel <- "TCGA-T9-A92H"
-het_data <- read.table(file=file,header=TRUE,sep='\t')
+## load vector of subjects to iterate over
+if (any(grepl("file_set", args))) {
+  file <- paste0(anno_dir,set_name)
+  file_set <- read.table(file=file, sep="\t", header=FALSE, col.names=c("subject_id","normal","tumor"))
+  subjects <- as.character(file_set$subject_id)
+}
+
+## load heterozygous site allele fractions for each subject
+file <- list()
+for (sub in subjects) {
+  file[[sub]] <- paste0(crunch_dir,sub,"_cnts2R.tsv")
+}
+het_data <- read.table(file=file[[1]],header=TRUE,sep='\t')
+if (length(file) > 1) {
+  for (i in 2:length(file)) {
+    het_data <- rbind(het_data, read.table(file=file[[i]],header=TRUE,sep='\t'))
+  }
+}
 type_levels <- c('norm','tumor')
 het_data$t_type <- factor(het_data$t_type,levels=type_levels,ordered=TRUE)  ## created ordered factors for tissue type
 het_data <- het_data[het_data$chrom %in% row.names(hg38.offsets),] ## filter out possible extraneous chrom
@@ -61,34 +78,39 @@ x.labels <- hg38.offsets$chrom
 scale.x <- scale_x_continuous("chromosome",breaks=hg38.offsets$cum_len,labels=x.labels,limits=c(x.min,x.max),expand=expand_scale(c(0.01,0.01)))
 
 leg.pos <- c(0.025,0.92)
-leg.just <- c(1,0)
+leg.just <- c(0,1)
 base_size <- 12
 
 p_col <- 4
 p_width <- 10
-p_height <- 12
+p_height <- 20
 
 type_names <- c('Normal','Tumor')
-s.color <- scale_color_manual(values=hue_pal()(2),labels=type_names)
+s.color <- scale_color_manual(values=rev(hue_pal()(2)),labels=type_names)
+sub_labs <- rep(type_names, nlevels(good_het_data$subject_id))
+names(sub_labs) <- rep(levels(good_het_data$t_type), nlevels(good_het_data$subject_id))
 
-sub_labs <- paste(levels(good_het_data$subject_id), levels(good_het_data$t_type))
-names(sub_labs) <- levels(good_het_data$t_type)
-
-n_subjects <- nlevels(het_data$subject_id)
-if (n_subjects <= 4) {
+if (nlevels(het_data$subject_id) <= 4) {
   p_col <- 1
   p_height <- 10
-  leg.just <- c(0,1)
   base_size <- 16
 }
-if (n_subjects <= 2) {
+if (nlevels(het_data$subject_id) <= 2) {
   p_height <- 5
+}
+if (nlevels(het_data$subject_id) > 9) {
+  p_height <- 40
+  leg.pos <- c(0.025,0.98)
+  leg.just <- c(0,0)
 }
 
 ## make plot
 setwd(plot_dir)
-#file <- "TCGA-T9-A92H_hetcnts_plot.pdf"
-file <- "sample_hetcnts_plot.pdf"
+if (nlevels(good_het_data$subject_id) < 2) {
+  file <- paste0(levels(good_het_data$subject_id),"_hetcnts_plot.pdf")
+} else {
+  file <- paste0(unlist(strsplit(set_name,"\\."))[1],"_hetcnts_plot.pdf")
+}
 pdf(file=file,width=p_width,height=p_height)
 
 theme_set(theme_linedraw(base_size=base_size))
@@ -116,14 +138,17 @@ theme2.leg <- theme(panel.border=element_rect(colour='black', size=1.0),
           legend.title=element_blank())
 
 ## density plot
-p1 <- ggplot(good_het_data[good_het_data$is_good,],aes(x=maj_fract,color=t_type))+stat_density(geom='line',position='identity') +
-  facet_wrap(~subject_id, ncol=1) + theme1.leg + s.color + scale_x_continuous("allele fraction",limits=c(0.0,1.0),breaks=seq(0.0,1.0,0.25))
+p1 <- ggplot(good_het_data[good_het_data$is_good,],aes(x=maj_fract,color=t_type)) +
+  stat_density(geom='line',position='identity') +
+  facet_wrap(~subject_id, ncol=1) + theme1.leg + s.color +
+  scale_x_continuous("allele fraction",limits=c(0.0,1.0),breaks=seq(0.0,1.0,0.25))
 
 ## karyotype-esque plot
-p2 <- ggplot(good_het_data[good_het_data$is_good,],aes(x=pos_adj,y=allele_fract))+geom_point(aes(color=t_type),size=0.1,show.legend=FALSE) +
+p2 <- ggplot(good_het_data[good_het_data$is_good,],aes(x=pos_adj,y=allele_fract)) +
+  geom_point(aes(color=t_type),size=0.1,show.legend=FALSE) +
   geom_vline(xintercept=c(hg38.offsets$cum_len,x.max),linetype='dashed') +
-  facet_wrap(~t_type, ncol=1, labeller=labeller(t_type=sub_labs)) + theme2.leg + s.color + scale.x + ylab("fraction homozygous") +
-  labs(caption=slabel)
+  facet_wrap(subject_id~t_type, ncol=1, labeller=labeller(t_type=sub_labs, .multi_line=FALSE)) +
+  theme2.leg + s.color + scale.x + ylab("fraction homozygous")
 
 plot_grid(p1,p2,ncol=2,rel_widths=c(0.33,0.66))
 

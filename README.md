@@ -183,7 +183,8 @@ grep 'AF=1.00' TCGA-A6-2680-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L |
 
 
 #### CHD::plots
-* plot_haplo_gg_chrom2r.R :: see [plot_haplo_chrom.R](scripts/plot_haplo_chrom.R)... almost there
+* plot_haplo_gg_chrom2r.R :: see [plot_haplo_chrom.R](scripts/plot_haplo_chrom.R)
+* karyoploteR...
 
 
 ### smallest file in test set
