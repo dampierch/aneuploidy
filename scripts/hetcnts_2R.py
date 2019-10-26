@@ -3,7 +3,7 @@
 ## hetcnts_2R.py :: input subject_[normal/tumor]_hetcnts.bed :: output TSV
 
     # from within het_counter.sh
-    # usage: hetcnts_2R.py --sample_only ${subject_id} --normal_hetcnts_bed ${crunch_dir}${subject_id}_normal_hetcnts.bed --tumor_hetcnts_bed ${crunch_dir}${subject_id}_tumor_hetcnts.bed
+    # usage: hetcnts_2R.py --sample_only ${subject_id} --normal_hetcnts_bed ${crunch_dir}${subject_id}_normal_hetcnts.bed --tumor_hetcnts_bed ${crunch_dir}${subject_id}_tumor_hetcnts.bed 2> subject_R_missing.err
 
     # this script takes bed files with simple allele counts at heterozygous
     # sites from normal and tumor bed files, then writes allele counts to file

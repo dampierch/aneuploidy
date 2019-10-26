@@ -45,13 +45,22 @@ echo done finding hetsites `date`
 
 ## get emperical allele counts
 echo start counting alleles `date`
-${script_dir}count_hetalleles.py --bam ${2} --hetsites_bed ${normal_pre}_hetsites.bed > ${crunch_dir}${subject_id}_normal_hetcnts.bed 2>${crunch_dir}${subject_id}_normal_errcnts.bed
-${script_dir}count_hetalleles.py --bam ${3} --hetsites_bed ${normal_pre}_hetsites.bed > ${crunch_dir}${subject_id}_tumor_hetcnts.bed 2>${crunch_dir}${subject_id}_tumor_errcnts.bed
+${script_dir}count_hetalleles.py --bam ${2} \
+  --hetsites_bed ${normal_pre}_hetsites.bed \
+  > ${crunch_dir}${subject_id}_normal_hetcnts.bed \
+  2> ${crunch_dir}${subject_id}_normal_errcnts.bed
+${script_dir}count_hetalleles.py --bam ${3} \
+  --hetsites_bed ${normal_pre}_hetsites.bed \
+  > ${crunch_dir}${subject_id}_tumor_hetcnts.bed \
+  2> ${crunch_dir}${subject_id}_tumor_errcnts.bed
 echo done counting alleles `date`
 
 ## prepare data for R
 echo start preparing R data `date`
-${script_dir}hetcnts_2R.py --subject ${subject_id} --normal_hetcnts_bed ${crunch_dir}${subject_id}_normal_hetcnts.bed --tumor_hetcnts_bed ${crunch_dir}${subject_id}_tumor_hetcnts.bed
+${script_dir}hetcnts_2R.py --subject ${subject_id} \
+  --normal_hetcnts_bed ${crunch_dir}${subject_id}_normal_hetcnts.bed \
+  --tumor_hetcnts_bed ${crunch_dir}${subject_id}_tumor_hetcnts.bed \
+  2> ${crunch_dir}${subject_id}_R_missing.err
 echo done preparing R data `date`
 
 echo `date` :: ${base_name} done

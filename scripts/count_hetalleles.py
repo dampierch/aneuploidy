@@ -3,7 +3,7 @@
 ## count_hetalleles.py :: input raw bam + normal hetsites bed :: output hetsites bed with observed (simple) allele counts
 
     # from within het_counter.sh
-    # usage: count_hetalleles.py --bam [normal/tumor].bam --hetsites_bed normal_hetsites.bed > subject_[normal/tumor]_hetcnts.bed 2> subject_[normal/tumor].err_cnts
+    # usage: count_hetalleles.py --bam [normal/tumor].bam --hetsites_bed normal_hetsites.bed > subject_[normal/tumor]_hetcnts.bed 2> subject_[normal/tumor]_errcnts.bed
 
     # this script takes a bam file and a bed file with hetsites in the normal
     # exome sequences and extracts from the bam allele counts at each hetsite;
@@ -20,7 +20,7 @@ import re
 
 bases = ('A','C','G','T')
 field_names = ('chrom','start','stop','type','score','strand','info')
-dp_thresh = 100
+dp_thresh = 0
 
 
 def get_known_alleles(info_str):

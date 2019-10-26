@@ -34,10 +34,12 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 #### CHD::use WRP download strategy (can't use bulk download anyway due to not enough storage space)
 * first try 9/25/2019 on first ten pairs (20 samples) in coad-read.file_info
 * [gdc_download.bash](scripts/gdc_download.bash)
+
 ```
 dt=`date +"%Y-%m-%d"`
 nohup bash ~/projects/aneuploidy/scripts/gdc_download.bash > ~/projects/aneuploidy/logs/gdc_download_${dt}.out 2> ~/projects/aneuploidy/logs/gdc_download_${dt}.err &
 ```
+
 * seems to have worked
 
 ### WRP::move_gdc_tcga_files.py hall_tcga_t10b10 hall_tcga_t10b10.file_info > hall_tcga_t10b10.file_set 2> hall_tcga_t10b10.file_errors
@@ -51,9 +53,11 @@ nohup bash ~/projects/aneuploidy/scripts/gdc_download.bash > ~/projects/aneuploi
 * de-duplication is assumed to have been done by GDC
 * requires a `*.file_set` file to identify samples
 * takes normal_file.bam and runs gatk_haplo.sh via sbatch
+
 ```
 for n in `cut -f 2 hall_tcga_t9b10.file_set`; do sbatch run_gatk_haplo.sh $n ; done
 ```
+
 * run_gatk_haplo.sh does three things:
   1. bedtools intersect with exome.bed
   2. samtools index
@@ -65,9 +69,11 @@ for n in `cut -f 2 hall_tcga_t9b10.file_set`; do sbatch run_gatk_haplo.sh $n ; d
 * the script generates two output files:
   1. `*_normal_ed.bam`
   2. `*.snp.indel.vcf_L`
+
 ```
 start_paired_hets.py hall_tcga_t61.file_set
 ```
+
 * calls find_count_hets_tumor_pair_gdc.sh, which in turn calls find_hetsites.py, count_het_freqs2.py, het_cnts2R.py
 * find_hetsites.py does three things:
   1. reads normal sample vcf
@@ -91,17 +97,22 @@ start_paired_hets.py hall_tcga_t61.file_set
 * which exome.bed to use: either broad, generic or sample-specific; going to try broad, generic first
 * i downloaded SureSelect Clinical Research Exome V2 (67.3 Mb, hg38) from agilent catalogue...no liftOver required!
 * will use S30409818_Regions.bed as exome reference
+
 ```
 /scratch/chd5n/aneuploidy/exome-kits/SureSelect_CRE_V2_hg38/S30409818_Regions.bed
 ```
+
 * which reference genome.fa to use: either generic latest hg38 from ucsc or GDC-specific; going to try GDC-specific first
+
 ```
 rsync -avzP rsync://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/chromFa.tar.gz .
 rsync -avzP rsync://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/latest/hg38.fa.gz .
 ```
+
 * [Heng Li recommends](http://lh3.github.io/2017/11/13/which-human-reference-genome-to-use):
 * `ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz`
 * [GDC used](https://gdc.cancer.gov/about-data/data-harmonization-and-generation/gdc-reference-files) a combo of Heng Li's rec plus decoys and viruses
+
 ```
 # for Li's
 rsync -avzhP rsync://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz /scratch/chd5n/Reference_genome/ ## took 9 sec
@@ -115,16 +126,20 @@ tar xvzf GRCh38.d1.vd1.fa.tar.gz
 # now resides at following path:
 /scratch/chd5n/Reference_genome/GRCh38.d1.vd1.fa
 ```
+
 * create dict and index for reference genome
 * run gatk_haplo
   1. [run_gatk_haplo.py](scripts/run_gatk_haplo.py)
   2. [gatk_haplo.bash](scripts/gatk_haplo.bash)
+
 ```
 cd ~/projects/aneuploidy/scripts
 file_set=/scratch/chd5n/aneuploidy/raw-data/annotations/coad-read_2019-09-26.file_set
 for file in `cut -f 2 ${file_set}`; do sbatch gatk_haplo.bash ${file}; done
 ```
+
 * output is vcf_L (TCGA-A6-5661-10A-01D-1650-10_Illumina_gdc_realn is large outlier)
+
 ```
 #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  TCGA-T9-A92H-10A-01D-A370-10
 chr1    17385   .       G       A       176.77  .       AC=1;AF=0.500;AN=2;BaseQRankSum=-2.255;ClippingRankSum=0.000;DP=39;ExcessHet=3.0103;FS=0.000;MLEAC=1;MLEAF=0.500;MQ=39.04;MQRankSum=-1.732;QD=4.53;ReadPosRankSum=0.201;SOR=0.099       GT:AD:DP:GQ:PL  0/1:30,9:39:99:205,0,1033
@@ -146,6 +161,7 @@ DP=approx read depth 39 (sum of allelic depths)
 GQ=genotype quality 99
 PL=normalized, phred-scaled likelihoods for genotypes 205,0,1033
 ```
+
 * [1000G reference page for genotype format in vcf](https://www.internationalgenome.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-40/)
 * AF is theoretical based on called genotype, so always 0.5 or 1; empirical genotype can be calculated from AD field
 * homozygous genotypes are sometimes called even with reads supporting heterozygosity; presumably based on read and alignment quality
@@ -170,9 +186,27 @@ grep 'AF=1.00' TCGA-A6-2680-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L |
 * start_paired_hets.py `*.file_set` :: see [run_het_counter.py](scripts/run_het_counter.py)
 * find_count_hets_tumor_pair_gdc.sh :: see [het_counter.sh](scripts/het_counter.sh)
 * find_hetsites.py :: see [find_hetsites.py](scripts/find_hetsites.py); includes modification to accommodate genotypes without reference allele
-* count_het_freqs2.py :: see [count_hetalleles.py](scripts/count_hetalleles.py); includes modification for more intuitive loop over pileupcolumns
+* count_het_freqs2.py :: see [count_hetalleles.py](scripts/count_hetalleles.py); includes modification for more intuitive loop over pileupcolumns as well as dp_thresh
 * het_cnts2R.py :: see [hetcnts_2R.py](scripts/hetcnts_2R.py); includes minor modification with get_hetcnts_list function
 * must remember to make scripts executable with `#!/usr/bin/env python3` at top and `chmod +x` at unix command line
+* with dp_thresh in count_hetalleles set to x, first_10_pairs had:
+
+| dp_thresh | tissue type | errcnts | hetcnts | R missing |
+| :--: | :--: | :--: | :--: | :--: |
+| 100 | normal | 13760 | 69617 | 4282 |
+| 100 | tumor | 36830 | 46547 | 28574 |
+| 0 | normal |
+| 0 | tumor |
+| 50 | normal |
+| 50 | tumor |
+| x | normal |
+| x | tumor |
+| x | normal |
+| x | tumor |
+| x | normal |
+| x | tumor |
+
+
 
 
 ### wrp::plots
