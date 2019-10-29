@@ -191,14 +191,23 @@ grep 'AF=1.00' TCGA-A6-2680-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L |
 * must remember to make scripts executable with `#!/usr/bin/env python3` at top and `chmod +x` at unix command line
 * with dp_thresh in count_hetalleles set to x, first_10_pairs had:
 
+```
+wc -l *_normal_errcnts.bed
+wc -l *_normal_hetcnts.bed
+grep 'normal missing' *_R_missing.err | wc -l
+wc -l *_tumor_errcnts.bed
+wc -l *_tumor_hetcnts.bed
+grep 'tumor missing' *_R_missing.err | wc -l
+```
+
 | dp_thresh | tissue type | errcnts | hetcnts | R missing |
 | :--: | :--: | :--: | :--: | :--: |
 | 100 | normal | 13760 | 69617 | 4282 |
 | 100 | tumor | 36830 | 46547 | 28574 |
-| 0 | normal |
-| 0 | tumor |
-| 50 | normal |
-| 50 | tumor |
+| 0 | normal | 37 | 83340 | 10 |
+| 0 | tumor | 2130 | 81247 | 2103 |
+| 50 | normal | 43 | 83334 | 17 |
+| 50 | tumor | 14101 | 69276 | 14041 |
 | x | normal |
 | x | tumor |
 | x | normal |
@@ -206,7 +215,8 @@ grep 'AF=1.00' TCGA-A6-2680-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L |
 | x | normal |
 | x | tumor |
 
-
+##### CHD:optimal dp_thresh
+* will be related to coverage; see [run_coverage_checker.py](scripts/run_coverage_checker.py), [coverage_checker.sh](scripts/coverage_checker.sh), and [coverage_checker.py](scripts/coverage_checker.py)
 
 
 ### wrp::plots
@@ -217,7 +227,7 @@ grep 'AF=1.00' TCGA-A6-2680-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L |
 
 
 #### CHD::plots
-* plot_haplo_gg_chrom2r.R :: see [plot_haplo_chrom.R](scripts/plot_haplo_chrom.R)
+* plot_haplo_gg_chrom2r.R :: see [run_plotter.py](scripts/run_plotter.py) and [plot_haplo_chrom.R](scripts/plot_haplo_chrom.R)
 * karyoploteR...
 
 

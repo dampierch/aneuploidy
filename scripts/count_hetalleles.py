@@ -20,7 +20,7 @@ import re
 
 bases = ('A','C','G','T')
 field_names = ('chrom','start','stop','type','score','strand','info')
-dp_thresh = 0
+dp_thresh = 50
 
 
 def get_known_alleles(info_str):
