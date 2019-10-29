@@ -217,6 +217,8 @@ grep 'tumor missing' *_R_missing.err | wc -l
 
 ##### CHD:optimal dp_thresh
 * will be related to coverage; see [run_coverage_checker.py](scripts/run_coverage_checker.py), [coverage_checker.sh](scripts/coverage_checker.sh), and [coverage_checker.py](scripts/coverage_checker.py)
+* these scripts work but take too long...need to parallelize the depth counter...
+* code from this [BioStars post](https://www.biostars.org/p/275974/#276179) should be helpful...
 
 
 ### wrp::plots

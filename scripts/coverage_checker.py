@@ -70,6 +70,8 @@ with open(args.refex_bed,'r') as in_f:
     print('whole exome coverage = %sx' % (round(sum(exome_reads)/sum(exome_length))))
 
 
+#### should also include median as well as 'effective mean' without true length
+
 ## close bamfile once coverage calculated
 bamfile.close()
 
@@ -111,3 +113,33 @@ bamfile.close()
 #         counter = counter + 1
 #     print('whole exome coverage = %sx' % (round(sum(exome_reads)/sum(exome_length))))
 # bamfile.close()
+
+
+
+##### parallelize
+    ## code from [BioStars post](https://www.biostars.org/p/275974/#276179)
+# import pysam
+# import sys
+# from multiprocessing import Pool
+# import time
+# def countReads(chrom,BAM):
+#     count=0
+#     # here's the fix
+#     bam = pysam.AlignmentFile(BAM,'rb')
+#
+#     Itr = bam.fetch(str(chrom),multiple_iterators=True)
+#     for Aln in Itr: count+=1
+#
+# if __name__ == '__main__':
+#     start = time.time()
+#     chroms=[x+1 for x in range(22)]
+#     cpu=6
+#     BAM = sys.argv[1]
+#     pool = Pool(processes=cpu)
+#     for x in range(len(chroms)):
+#         pool.apply_async(countReads,(chroms[x],BAM,))
+#     #countReads(chroms[x],bamfh)
+#     pool.close()
+#     pool.join()
+#     end = time.time()
+#     print(end - start)
