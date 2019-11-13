@@ -4,7 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=10000
+#SBATCH --mem=50000
 #SBATCH --time=5:00:00
 #SBATCH --partition=standard
 #SBATCH --account=chd5n_alloc
@@ -17,7 +17,10 @@
 
 ## intersection took about 25 min, <1 GB
 ## variant call took 24 min to 3h, ~2GB on 1 thread
-## process took >6GB on 4 threads
+## process took >10GB on 4 threads for select samples
+## process on 15GB slow for samples that went quickly on 10GB (e.g. AF 3400)
+## should perhaps choose a memory limit at least as large as largest normal exome bam file (26GB in first set)
+## with 50GB, no errors, max 12.3GB, 2h
 
 
 module load gcc/7.1.0 bedtools/2.26.0 samtools/1.9 gatk/4.0.0.0
