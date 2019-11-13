@@ -151,6 +151,7 @@ AF=allele freq, for each alt allele (theoretical)
 AN=total number of alleles (always 2 in this set)
 DP=approx read depth, some reads filtered
 DS=any downsampling?
+QD=QualByDepth
 MLEAC=max likelihood expectation for allele count, for each alt allele
 MLEAF=max likelihood expectation for allele freq, for each alt allele
 
@@ -185,8 +186,8 @@ grep 'AF=1.00' TCGA-A6-2680-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L |
 #### CHD::allele counts
 * start_paired_hets.py `*.file_set` :: see [run_het_counter.py](scripts/run_het_counter.py)
 * find_count_hets_tumor_pair_gdc.sh :: see [het_counter.sh](scripts/het_counter.sh)
-* find_hetsites.py :: see [find_hetsites.py](scripts/find_hetsites.py); includes modification to accommodate genotypes without reference allele
-* count_het_freqs2.py :: see [count_hetalleles.py](scripts/count_hetalleles.py); includes modification for more intuitive loop over pileupcolumns as well as dp_thresh
+* find_hetsites.py :: see [find_hetsites.py](scripts/find_hetsites.py); includes modification to accommodate genotypes without reference allele as well as QD threshold instead of depth and QUAL
+* count_het_freqs2.py :: see [count_hetalleles.py](scripts/count_hetalleles.py); includes modification for more intuitive loop over pileupcolumns as well as cov_thresh
 * het_cnts2R.py :: see [hetcnts_2R.py](scripts/hetcnts_2R.py); includes minor modification with get_hetcnts_list function
 * must remember to make scripts executable with `#!/usr/bin/env python3` at top and `chmod +x` at unix command line
 * with dp_thresh in count_hetalleles set to x, first_10_pairs had:
@@ -208,6 +209,11 @@ grep 'tumor missing' *_R_missing.err | wc -l
 | 0 | tumor | 2130 | 81247 | 2103 |
 | 50 | normal | 43 | 83334 | 17 |
 | 50 | tumor | 14101 | 69276 | 14041 |
+
+* with qd_thresh in find_hetsites set to 5 and cov_thresh in count_hetalleles set to 20, first_10_pairs had:
+
+| cov_thresh | tissue type | errcnts | hetcnts | R missing |
+| :--: | :--: | :--: | :--: | :--: |
 | x | normal |
 | x | tumor |
 | x | normal |
@@ -215,10 +221,11 @@ grep 'tumor missing' *_R_missing.err | wc -l
 | x | normal |
 | x | tumor |
 
-##### CHD:optimal dp_thresh
+##### CHD:optimal dp_thresh (i.e. cov_thresh)
 * will be related to coverage; see [run_coverage_checker.py](scripts/run_coverage_checker.py), [coverage_checker.sh](scripts/coverage_checker.sh), and [coverage_checker.py](scripts/coverage_checker.py)
 * these scripts work but take too long...need to parallelize the depth counter...
 * code from this [BioStars post](https://www.biostars.org/p/275974/#276179) should be helpful...
+* more importantly, GATK has DiagnoseTargets; see [coverage_analysis.py](scripts/coverage_analysis.py)
 
 
 ### wrp::plots
@@ -235,6 +242,11 @@ grep 'tumor missing' *_R_missing.err | wc -l
 
 ### smallest file in test set
 /scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/TCGA-AF-3400-01A-01D-1989-10_gapfillers_Illumina_gdc_realn.bam
+
+### msi status
+* developing gdc_requests_msi.py; see [gdc_requests_files.py](scripts/gdc_requests_files.py) for now
+
+
 
 ## early thoughts
 

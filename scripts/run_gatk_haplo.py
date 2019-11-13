@@ -22,8 +22,9 @@ crunch_path = seq_home + 'crunch/'
 input_file = anno_home + 'coad-read_2019-09-26.file_set'
 
 os.chdir(script_home)
-with fileinput.input(files=(input_file)) as in_f:
+with open(input_file,'r') as in_f:
     for in_line in in_f:
         (subject_id, file_name_norm, file_name_tum) = in_line.strip('\n').split('\t')
-        cmd = ' '.join(['sbatch', 'gatk_haplo.bash', crunch_path + file_name_norm])
+        output_setting = '--output=gatk_haplo_' + subject_id + '.out'
+        cmd = ' '.join(['sbatch', output_setting, 'gatk_haplo.sh', crunch_path + file_name_norm])
         subprocess.call(cmd, shell=True)

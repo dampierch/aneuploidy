@@ -5,7 +5,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=6000
-#SBATCH --time=5:00:00
+#SBATCH --time=48:00:00
 #SBATCH --partition=standard
 #SBATCH --account=chd5n_alloc
 #SBATCH --mail-type=ALL
@@ -19,7 +19,9 @@
   ## (subject_id, crunch_path + file_name_norm, crunch_path + file_name_tum)
   ## and finds coverage over a given reference exome for each bam file
   ##
-  ## coverage_checker.py appears to use ...
+  ## coverage_checker.py appears to use a LOT of time but minimal memory
+  ## long-term goal is to parallelize, but for now will use first set results
+  ## A6-5661 took ~37h 990MB, AF-3400 took ~15h 660MB
 
 
 module load anaconda/5.2.0-py3.6
@@ -31,6 +33,8 @@ subject_id=${1}
 normal_pre=${2%.*}
 tumor_pre=${3%.*}
 
+echo "################################################################################"
+echo
 echo starting `date`
 echo $1 `echo $2 | awk -v FS="/" '{print $NF}'` `echo $3 | awk -v FS="/" '{print $NF}'`
 
@@ -47,3 +51,6 @@ echo done :: coverage_checker.py :: `date`
 echo `date` :: ${base_name} done
 echo "seff ${SLURM_JOBID}"
 echo "sacct -o reqmem,maxrss,elapsed,alloccpus -j ${SLURM_JOBID}"
+echo
+echo "################################################################################"
+echo

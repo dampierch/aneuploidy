@@ -5,17 +5,19 @@
     # from within het_counter.sh
     # usage: find_hetsites.py *.vcf > *_hetsites.bed
 
-    # this script takes tab-delim output from gatk_haplo.bash (*.vcf_L) and
-    # extracts positions of SNP alt alleles with AF=0.500 && sufficient read depth;
-    # writes bed with location, AF, alleles
+    # this script takes tab-delim output from gatk_haplo.bash (*.vcf) and
+    # extracts positions of SNP alt alleles with AF=0.500 && sufficient
+    # QualByDepth value (GATK recommends 2, we use 5); writes bed with
+    # location, AF, alleles
 
 
 import fileinput
 import re
 
 
-qual_thresh = 100
-dp_thresh = 100
+# qual_thresh = 100
+# dp_thresh = 100
+qd_thresh = 5  ## semi-arbitrary, see coverage_analysis for discussion
 out_fields = ('CHROM', 'POS0', 'POS', 'name', 'QUAL', 'strand', 'info_str')
 
 
@@ -62,24 +64,35 @@ with fileinput.input() as in_f:
                     continue
             else:
                 continue
-        ## skip low quality snps
-        if float(data['QUAL']) < qual_thresh:
-            continue
-        good_dp = False
+        # ## skip low quality snps
+        # if float(data['QUAL']) < qual_thresh:
+        #     continue
+        # good_dp = False
+        good_qd = False
         good_af = False
         alt_only = False
         for info in data['INFO'].split(';'):
             (key,val) = info.split('=')
-            if key=='DP' and int(val) > dp_thresh:
-                good_dp = True
+            if key=='QD' and float(val) > qd_thresh:
+                good_qd = True
+            # if key=='DP' and int(val) > dp_thresh:
+            #     good_dp = True
             if key=='AF' and (re.search(r',',val) or float(val)==0.5):
                 if re.search(r',',val):
                     alt_only = True
                 good_af = True
                 data['info_str'] = "%s;%s" % (info,allele_info(data,data[last_field],alt_only))
-        if good_dp and good_af:
+        if good_qd and good_af:
             print('\t'.join([data[field] for field in out_fields]))
 
 
 ## for testing
-# with fileinput.input('/scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/TCGA-AF-3400-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L') as in_f:
+# with open('/scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/TCGA-AF-3400-11A-01D-1554-10_Illumina_gdc_realn.snp.indel.vcf_L','r') as in_f:
+#     for in_line in in_f:
+#         if in_line[0]=='#':  ## use this test with continue to skip processing leading comments
+#             if in_line[0:6]=='#CHROM':
+#                 field_names = in_line.strip('\n').split('\t')
+#                 field_names[0] = 'CHROM'  ## this gets rid of '#'
+#                 last_field = field_names[-1]  ## variable name with subject_id in first three '-' delim fields
+#             continue  ## pops out to next iteration of for loop to skip processing leading comments
+#         data = dict(list(zip(field_names,in_line.strip('\n').split('\t'))))

@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=20000
-#SBATCH --time=8:00:00
+#SBATCH --mem=10000
+#SBATCH --time=5:00:00
 #SBATCH --partition=standard
 #SBATCH --account=chd5n_alloc
 #SBATCH --mail-type=ALL
@@ -17,6 +17,7 @@
 
 ## intersection took about 25 min, <1 GB
 ## variant call took 24 min to 3h, ~2GB on 1 thread
+## process took >6GB on 4 threads
 
 
 module load gcc/7.1.0 bedtools/2.26.0 samtools/1.9 gatk/4.0.0.0
@@ -39,7 +40,7 @@ if [ ! -e ${exome_bam} ]; then
     echo `date` :: ${base_name} intersect done
 fi
 
-java -Dsamjdk.use_async_io_read_samtools=false -Dsamjdk.use_async_io_write_samtools=true -Dsamjdk.use_async_io_write_tribble=false -Dsamjdk.compression_level=1 -jar /apps/software/standard/core/gatk/4.0.0.0/gatk-package-4.0.0.0-local.jar HaplotypeCaller -R ${REF_FILE} --input ${exome_bam} -L ${exome_bed_file} -O ${base_name}.snp.indel.vcf_L
+java -Dsamjdk.use_async_io_read_samtools=false -Dsamjdk.use_async_io_write_samtools=true -Dsamjdk.use_async_io_write_tribble=false -Dsamjdk.compression_level=1 -jar /apps/software/standard/core/gatk/4.0.0.0/gatk-package-4.0.0.0-local.jar HaplotypeCaller -R ${REF_FILE} --input ${exome_bam} -L ${exome_bed_file} -O ${base_name}.snp.indel.vcf
 echo `date` :: ${base_name} done
 
 echo "seff ${SLURM_JOBID}"

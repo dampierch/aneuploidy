@@ -25,5 +25,5 @@ with open(input_file,'r') as in_f:
     for in_line in in_f:
         subject_id, file_name_norm, file_name_tum = in_line.strip('\n').split('\t')
         output_setting = '--output=coverage_checker_' + subject_id + '.out'
-        cmd = ' '.join(['sbatch', 'coverage_checker.sh', subject_id, crunch_path + file_name_norm, crunch_path + file_name_tum, output_setting])
+        cmd = ' '.join(['sbatch', output_setting, 'coverage_checker.sh', subject_id, crunch_path + file_name_norm, crunch_path + file_name_tum])
         subprocess.call(cmd, shell=True)

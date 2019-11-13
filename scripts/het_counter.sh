@@ -5,7 +5,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=2000
-#SBATCH --time=1:00:00
+#SBATCH --time=2:00:00
 #SBATCH --partition=standard
 #SBATCH --account=chd5n_alloc
 #SBATCH --mail-type=ALL
@@ -30,7 +30,7 @@ module load anaconda/5.2.0-py3.6
 
 script_dir=~/projects/aneuploidy/scripts/
 crunch_dir=/scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/
-vcf_suf="snp.indel.vcf_L"
+vcf_suf="snp.indel.vcf"
 subject_id=${1}
 normal_pre=${2%.*}
 tumor_pre=${3%.*}

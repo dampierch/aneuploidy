@@ -20,7 +20,7 @@ import re
 
 bases = ('A','C','G','T')
 field_names = ('chrom','start','stop','type','score','strand','info')
-dp_thresh = 50
+cov_thresh = 20  ## semi-arbitrary, see coverage_analysis for discussion
 
 
 def get_known_alleles(info_str):
@@ -106,7 +106,7 @@ with open(args.hetsites_bed_file,'r') as in_f:
         ## get observed allele counts
         (counts, known_total, all_total) = allele_counts(alleles,known_alleles)
         ## check for large counts of unknown alleles or absent locations
-        if all_total > dp_thresh and known_total/all_total > 0.8:
+        if all_total > cov_thresh and known_total/all_total > 0.8:
             allele_str = 'SD::' + ','.join(['%s=%d' % (x,counts[x]) for x in known_alleles])  ## SD is simple allele depth by counting aligned reads from bam
             print(';'.join((in_line,allele_str)))
         else:
