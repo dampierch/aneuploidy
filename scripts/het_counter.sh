@@ -22,7 +22,7 @@
 ## downstream processing in R
 ##
 ## find_hetsites and count_hetalleles appear to use minimal time/mem
-## first 10 samples took between 8 min and 52 min; max ~55 MB
+## first 10 samples took 22m - 1h; max ~55 MB
 ## hetcnts_2R.py uses no detectable memory, takes 1 sec per sample
 
 

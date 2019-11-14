@@ -5,12 +5,8 @@
 
 import io
 import json
-import os
 import pandas as pd
 import requests
-
-data_home = '/scratch/chd5n/aneuploidy/'
-anno_path = data_home + 'raw-data/annotations/'
 
 # get all case_id's from TCGA-COAD and READ
     ## finds 630 unique case_id entries w/o experimental_strategy and data_category filters
@@ -20,7 +16,7 @@ cases_endpt = 'https://api.gdc.cancer.gov/cases'
 fields = [
     'submitter_id', # good
     'case_id', # good
-    'disease_type', # good
+    'disease_type' # good
     # 'sample_ids' # ok
 
     # "submitter_analyte_ids", #?

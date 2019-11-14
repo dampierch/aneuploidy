@@ -1,0 +1,23 @@
+## Snakefile
+
+rule write_annotation:
+    input:
+        'gdc_write_anno.py'
+    output:
+        'output'
+    shell:
+        'python {input} > {output}'
+
+
+
+
+
+# ## example format
+# rule write_annotation:
+#     input:
+#         "data/genome.fa",
+#         "data/samples/A.fastq"
+#     output:
+#         "mapped_reads/A.bam"
+#     shell:
+#         "bwa mem {input} | samtools view -Sb - > {output}"

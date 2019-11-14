@@ -9,12 +9,13 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 * identifies files by filter for cases.submitter_id (subject_id)
 
 #### CHD::request file info from GDC
-* uses JSON request to files and cases endpoints via python
+* uses JSON request to files, cases, and legacy endpoints via python
 * identifies files by filter for cases.project.project_id, cases.primary_site, experimental_strategy, and data_category
 * generates a manifest for bulk download with gdc-client and a pheno file for parsing
-* cases endpoint gives submitter_id and disease_type, files endpoint gives rest
+* legacy endpoint gives msi_status; cases endpoint gives submitter_id and disease_type; files endpoint gives rest
 * [gdc_requests_cases.py](scripts/gdc_requests_cases.py)
 * [gdc_requests_files.py](scripts/gdc_requests_files.py)
+* [gdc_requests_legacy.py](scripts/gdc_requests_legacy.py)
 * [gdc_write_anno.py](scripts/gdc_write_anno.py)
 
 ### WRP::parse_tcga_info.py hall_tcga_t10b10.tab > hall_tcga_t10b10.file_info
