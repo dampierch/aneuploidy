@@ -14,8 +14,7 @@ import re
 
 def set_filters():
     '''
-    set filters for gdc files endpoint search; these filters determine
-    which type of data is requested and retrieved; json format
+    set filters to target relevant units on endpoint; json format
     '''
     filters = {
         'op':'and',
@@ -60,123 +59,132 @@ def set_filters():
     return filters
 
 
-def get_files_res(endpoint,filters):
+def set_fields(field_type):
     '''
-    request WXS file_id entities from TCGA-COAD and READ
+    set fields for extraction from endpoint
     '''
-    fields = [
-        'file_name',
-        'file_id',
-        'file_size',
-        'md5sum',
-        'state',
-        'submitter_id',
-        'experimental_strategy', # 'WXS'
-        'data_category', # 'Sequencing Reads'
-        'data_format', # 'BAM'
-        'cases.case_id',
-        'cases.project.project_id',
-        'cases.primary_site',
-        'cases.demographic.gender',
-        'cases.demographic.race',
-        'cases.demographic.year_of_birth',
-        'cases.demographic.vital_status',
-        'cases.demographic.days_to_death',
-        'cases.demographic.age_at_index',
-        'cases.samples.sample_type', # tumor vs normal
-        'cases.samples.is_ffpe',
-        'cases.samples.sample_id',
-        'cases.tissue_source_site.name',
-        'cases.exposures.weight',
-        'cases.exposures.bmi',
-        'cases.exposures.height'
+    if field_type == 'default':
+        fields = [
+            'file_name',
+            'file_id',
+            'file_size',
+            'md5sum',
+            'state',
+            'submitter_id',
+            'experimental_strategy', # 'WXS'
+            'data_category', # 'Sequencing Reads'
+            'data_format', # 'BAM'
+            'cases.case_id',
+            'cases.project.project_id',
+            'cases.primary_site',
+            'cases.demographic.gender',
+            'cases.demographic.race',
+            'cases.demographic.year_of_birth',
+            'cases.demographic.vital_status',
+            'cases.demographic.days_to_death',
+            'cases.demographic.age_at_index',
+            'cases.samples.sample_type', # tumor vs normal
+            'cases.samples.is_ffpe',
+            'cases.samples.sample_id',
+            'cases.tissue_source_site.name',
+            'cases.exposures.weight',
+            'cases.exposures.bmi',
+            'cases.exposures.height'
 
-        ## nested nature makes more suitable for special lookup
-        #'analysis.metadata.read_groups.read_group_qcs.total_sequences',
+            ## nested nature makes more suitable for special lookup
+            #'analysis.metadata.read_groups.read_group_qcs.total_sequences',
 
-        ## nested nature makes more suitable for invididual lookup
-        # 'analysis.metadata.read_groups.target_capture_kit_name',
-        # 'analysis.metadata.read_groups.target_capture_kit',
-        # 'analysis.metadata.read_groups.target_capture_kit_target_region',
-        # 'analysis.metadata.read_groups.target_capture_kit_catalog_number',
-        # 'analysis.metadata.read_groups.target_capture_kit_vendor'
+            ## nested nature makes more suitable for invididual lookup
+            # 'analysis.metadata.read_groups.target_capture_kit_name',
+            # 'analysis.metadata.read_groups.target_capture_kit',
+            # 'analysis.metadata.read_groups.target_capture_kit_target_region',
+            # 'analysis.metadata.read_groups.target_capture_kit_catalog_number',
+            # 'analysis.metadata.read_groups.target_capture_kit_vendor'
 
-        ## useless fields
-        # 'cases.demographic.ethnicity', # less useful than race; 'not hispanic or latino'
-        # 'platform', # generic Illumina
-        # 'data_type', # 'Aligned Reads'
-        # 'annotations.entity_id', # same as cases.case_id
-        # 'annotations.case_id', # same as cases.case_id
-        # 'msi_score', # empty
-        # 'msi_status', # empty
-        # 'proportion_reads_mapped', # empty
-        # 'proportion_targets_no_coverage' # empty
-        # 'cases.lost_to_followup', # empty
-        # 'cases.samples.annotations.entity_id', # empty
-        # 'cases.follow_ups.molecular_tests.mismatch_repair_mutation', # empty
-        # 'cases.follow_ups.molecular_tests.ploidy', # empty
-        # 'analysis.metadata.read_groups.target_capture_kit_version', # empty
-        # 'analysis.metadata.read_groups.RIN', # empty
-        # 'analysis.metadata.read_groups.instrument_model', # empty
-        # 'analysis.metadata.read_groups.read_group_qcs.per_tile_sequence_quality', # PASS/FAIL/WARN
-        # 'analysis.metadata.read_groups.read_group_qcs.per_base_sequence_content', # PASS/FAIL/WARN
-        # 'analysis.metadata.read_groups.read_group_qcs.per_base_sequence_quality', # PASS/FAIL/WARN
-        # 'analysis.metadata.read_groups.read_group_qcs.per_sequence_gc_content', # PASS/FAIL/WARN
-        # 'analysis.metadata.read_groups.read_group_qcs.per_sequence_quality_score', # PASS/FAIL/WARN
-        # 'analysis.metadata.read_groups.read_group_qcs.workflow_type', # empty
-        # 'analysis.metadata.read_groups.read_group_qcs.workflow_version', # empty
-        # 'analysis.metadata.read_groups.read_group_qcs.fastq_name', # empty
-        # 'analysis.metadata.read_groups.read_group_qcs.basic_statistics', # empty
-        # 'downstream_analyses.output_files.proportion_reads_mapped', # empty
-        # 'downstream_analyses.output_files.proportion_targets_no_coverage', # empty
-        # 'archive.archive_id', # empty
-        # 'proportion_coverage_30X', # empty
-        # 'average_base_quality', # empty
-        # 'mean_coverage', # empty
-        # 'cases.sample_ids', # emtpy
-        # 'cases.samples.tissue_type', # typically 'not reported'
-        # 'cases.samples.distance_normal_to_tumor', # empty
-        # 'cases.samples.biospecimen_anatomic_site', # empty
-        # 'cases.exposures.pack_years_smoked', # empty
-        # 'cases.exposures.alcohol_history', # typically 'not reported'
-    ]
+            ## useless fields
+            # 'cases.demographic.ethnicity', # less useful than race; 'not hispanic or latino'
+            # 'platform', # generic Illumina
+            # 'data_type', # 'Aligned Reads'
+            # 'annotations.entity_id', # same as cases.case_id
+            # 'annotations.case_id', # same as cases.case_id
+            # 'msi_score', # empty
+            # 'msi_status', # empty
+            # 'proportion_reads_mapped', # empty
+            # 'proportion_targets_no_coverage' # empty
+            # 'cases.lost_to_followup', # empty
+            # 'cases.samples.annotations.entity_id', # empty
+            # 'cases.follow_ups.molecular_tests.mismatch_repair_mutation', # empty
+            # 'cases.follow_ups.molecular_tests.ploidy', # empty
+            # 'analysis.metadata.read_groups.target_capture_kit_version', # empty
+            # 'analysis.metadata.read_groups.RIN', # empty
+            # 'analysis.metadata.read_groups.instrument_model', # empty
+            # 'analysis.metadata.read_groups.read_group_qcs.per_tile_sequence_quality', # PASS/FAIL/WARN
+            # 'analysis.metadata.read_groups.read_group_qcs.per_base_sequence_content', # PASS/FAIL/WARN
+            # 'analysis.metadata.read_groups.read_group_qcs.per_base_sequence_quality', # PASS/FAIL/WARN
+            # 'analysis.metadata.read_groups.read_group_qcs.per_sequence_gc_content', # PASS/FAIL/WARN
+            # 'analysis.metadata.read_groups.read_group_qcs.per_sequence_quality_score', # PASS/FAIL/WARN
+            # 'analysis.metadata.read_groups.read_group_qcs.workflow_type', # empty
+            # 'analysis.metadata.read_groups.read_group_qcs.workflow_version', # empty
+            # 'analysis.metadata.read_groups.read_group_qcs.fastq_name', # empty
+            # 'analysis.metadata.read_groups.read_group_qcs.basic_statistics', # empty
+            # 'downstream_analyses.output_files.proportion_reads_mapped', # empty
+            # 'downstream_analyses.output_files.proportion_targets_no_coverage', # empty
+            # 'archive.archive_id', # empty
+            # 'proportion_coverage_30X', # empty
+            # 'average_base_quality', # empty
+            # 'mean_coverage', # empty
+            # 'cases.sample_ids', # emtpy
+            # 'cases.samples.tissue_type', # typically 'not reported'
+            # 'cases.samples.distance_normal_to_tumor', # empty
+            # 'cases.samples.biospecimen_anatomic_site', # empty
+            # 'cases.exposures.pack_years_smoked', # empty
+            # 'cases.exposures.alcohol_history', # typically 'not reported'
+        ]
+    elif field_type == 'depth':
+        fields = [
+            'file_id',
+            'analysis.metadata.read_groups.read_group_qcs.total_sequences'
+        ]
+    elif field_type == 'kits':
+        fields = [
+            'file_id',
+            'analysis.metadata.read_groups.target_capture_kit_name',
+            'analysis.metadata.read_groups.target_capture_kit_vendor'
+        ]
+    else:
+        sys.exit('must enter valid field_type (i.e. default,depth,kits)')
     fields = ','.join(fields)
+    return fields
+
+
+def set_params(filters,fields):
+    '''
+    set parameters for https get request to endpoint
+    '''
     params = {
         'filters': filters,
         'fields': fields,
         'format': 'TSV',
-        'size': '1500'
+        'size': '1500'   ## set empirically to level greater than number of target files to get all at once
     }
-    response = requests.get(endpoint, params=params)
-    object = io.StringIO(response.content.decode('utf-8'))
-    files_res = pd.read_table(object)
-    return files_res
+    return params
 
 
-def get_read_depths(endpoint,filters):
+def get_results(endpoint,params):
     '''
-    request total sequences for WXS files
+    given an endpoint and parameters, execute https GET request and build
+    results dataframe
     '''
-    fields = [
-        'file_id',
-        'analysis.metadata.read_groups.read_group_qcs.total_sequences'
-    ]
-    fields = ','.join(fields)
-    params = {
-        'filters': filters,
-        'fields': fields,
-        'format': 'TSV',
-        'size': '1500'
-    }
     response = requests.get(endpoint, params=params)
     object = io.StringIO(response.content.decode('utf-8'))
-    read_depths = pd.read_table(object)
-    return read_depths
+    results = pd.read_table(object)
+    return results
 
 
 def parse_depth(read_depths):
     '''
-    return data frame with read depth for each file_id
+    given read_depths dataframe, return total_seq dataframe
+    with aggregate read depth for each file_id
     '''
     cols = list(read_depths.columns)
     pattern = re.compile(r'analysis.metadata.read_groups.\d*.read_group_qcs.0.total_sequences') # identify all possible seq groups and take first of paired-end seq counts
@@ -187,36 +195,34 @@ def parse_depth(read_depths):
     return total_seq
 
 
-def get_exome_kits(endpoint,files_res):
+def make_idx_blocks(files_res,idx_size):
     '''
-    request exome capture kits for each file
+    break uuids into manageable chunks for kit extraction
     '''
-    ## break into manageable chunks
     index = files_res['file_id'].tolist()
-    idx_siz = 150
-    idx_blk = []
+    idx_blocks = []
     idx = []
     for i in range(0, len(index)):
         if i == 0:
             idx.append(index[i])
-        elif i % idx_siz == 0:
-            idx_blk.append(idx)
+        elif i % idx_size == 0:
+            idx_blocks.append(idx)
             idx = [index[i]]
         elif i == (len(index)-1):
             idx.append(index[i])
-            idx_blk.append(idx)
+            idx_blocks.append(idx)
         else:
             idx.append(index[i])
-    ## prepare requests
-    fields = [
-        'file_id',
-        'analysis.metadata.read_groups.target_capture_kit_name',
-        'analysis.metadata.read_groups.target_capture_kit_vendor'
-    ]
-    fields = ','.join(fields)
+    return idx_blocks
+
+
+def get_exome_kits(endpoint,idx_blocks):
+    '''
+    request exome capture kits for each file_id in index block
+    '''
+    fields = set_fields('kits')
     kits = pd.DataFrame()
-    ## make requests
-    for i in idx_blk:
+    for i in idx_blocks:
         filters = {
             'op':'in',
             'content':{
@@ -229,15 +235,12 @@ def get_exome_kits(endpoint,files_res):
             'filters': filters,
             'fields': fields,
             'format': 'TSV',
-            'size': idx_siz
+            'size': len(i)
         }
-        response = requests.get(endpoint, params=params)
-        object = io.StringIO(response.content.decode('utf-8'))
-        x = pd.read_table(object)
+        results = get_results(endpoint,params)
         select = ['file_id', 'analysis.metadata.read_groups.0.target_capture_kit_name', 'analysis.metadata.read_groups.0.target_capture_kit_vendor']
-        x = x[select]
-        kits = kits.append(x)
-    ## fix column names
+        results = results[select]
+        kits = kits.append(results)
     kits.columns = ['file_id', 'capture_kit_name', 'capture_kit_vendor']
     return kits
 
@@ -271,17 +274,27 @@ def fix_format(files_res):
     return files_res
 
 
-def main(endpoint):
+def main():
+    endpoint = 'https://api.gdc.cancer.gov/files/'
+    ## baseline files uuids and other info
     filters = set_filters()
-    files_res = get_files_res(endpoint,filters)
-    read_depths = get_read_depths(endpoint,filters)
+    fields = set_fields('default')
+    params = set_params(filters,fields)
+    files_res = get_results(endpoint,params)
+    ## add sequencing depths
+    fields = set_fields('depth')
+    params = set_params(filters,fields)
+    read_depths = get_results(endpoint,params)
     total_sequences = parse_depth(read_depths)
     files_res = files_res.merge(total_sequences, on='file_id')  ## merge files_res and total_sequences
-    exome_kits = get_exome_kits(endpoint,files_res)
+    ## add exome capture kits
+    idx_size = 150
+    idx_blocks = make_idx_blocks(files_res,idx_size)
+    exome_kits = get_exome_kits(endpoint,idx_blocks)
     files_res = files_res.merge(exome_kits, on='file_id')  ## merge files_res and exome_kits
+    ## fix formatting
     files_res = fix_format(files_res)
     return files_res
 
 
-endpoint = 'https://api.gdc.cancer.gov/files/'
-files_res = main(endpoint)
+files_res = main()

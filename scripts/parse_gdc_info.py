@@ -9,7 +9,6 @@
     # *.file_info file fields: subject_id, tissue_type, file_name, file_id
     # importantly, *.file_info is sorted by subject_id and tissue_type
 
-import fileinput
 import re
 import pandas as pd
 
@@ -25,7 +24,7 @@ print_fields = ['subject_id', 'tissue_type', 'file_name', 'file_id']
 sub_set = {}
 sub_list = []
 
-with fileinput.input(files=(input_file)) as in_f:
+with open(input_file,'r') as in_f:
     for d_line in in_f:
         if in_f.isfirstline():
             header_fields = d_line.strip().split('\t')
