@@ -136,20 +136,23 @@ def parse_xml(files_res,dest):
     '''
     parse xml files to extract msi status
     '''
-    fields = ['subject_id','msi_status']
     msi_dict = {}
     msi_dict['subject_id'] = []
-    msi_dict['msi_res'] = []
+    msi_dict['msi_status'] = []
     file_count = 0
     for uuid in files_res.id:
         pattern = dest + uuid + '/*.xml'
         fn = glob.glob(pattern)[0]
         tree = ET.parse(fn)  ## parse xml
-        root = tree.getroot()
-        subject_id = root[1][0].text
-        msi_status = root[1][4][0][1].text
+        for elem in tree.getiterator():
+            if 'bcr_patient_barcode' in elem.tag:
+                subject_id = elem.text
+            if 'mononucleotide_and_dinucleotide_marker_panel_analysis_status' in elem.tag and elem.text != None:
+                msi_status = elem.text
+            elif 'mononucleotide_marker_panel_analysis_status' in elem.tag and elem.text != None:
+                msi_status = elem.text
         msi_dict['subject_id'].append(subject_id)
-        msi_dict['msi_res'].append(msi_status)
+        msi_dict['msi_status'].append(msi_status)
         file_count = file_count + 1
     print(' '.join([str(file_count),'files parsed']))
     msi_res = pd.DataFrame.from_dict(msi_dict)
@@ -161,13 +164,15 @@ def main():
     filters = set_filters()
     files_res = get_results(endpoint,filters)
     dest = anno_home + 'msi/'
-    download_xml_manifest(files_res,gdc_home,dest)
+    # download_xml_manifest(files_res,gdc_home,dest)
     msi_res = parse_xml(files_res,dest)
     return msi_res
+
+
+msi_res = main()
+
 
 ## bcr patient uuid
 # root[1][3].text
 ## bcr patient barcode
 # root[1][0].text
-
-msi_res = main()
