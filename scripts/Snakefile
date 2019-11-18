@@ -1,12 +1,22 @@
 ## Snakefile
 
+
+    ## module load snakemake/5.2.2
+    ## snakemake -np TARGET
+
+
+## globals
+anno = '/scratch/chd5n/aneuploidy/raw-data/annotations/'
+
+
 rule write_annotation:
     input:
         'gdc_write_anno.py'
     output:
-        'output'
+        anno + 'pheno.tsv',
+        anno + 'manifest.tsv'
     shell:
-        'python {input} > {output}'
+        'python {input}'
 
 
 
