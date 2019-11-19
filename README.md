@@ -26,7 +26,7 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 #### CHD::modify parse_tcga_info.py to take as input pheno.tsv and generate samples.file_info
 * i do so in the following script and of duplicates i take max sequences
 * output is coad-read.file_info
-* [parse_gdc_info.py](scripts/parse_gdc_info.py)
+* [gdc_parse_info.py](scripts/gdc_parse_info.py)
 
 ### WRP::nohup ~/ncbi/gdc_download_file_info.sh ~/ncbi/hall_tcga_t61-80.file_info > gdc_down_t61-80.log 2> gdc_down_t61-80.err &
 * bash script feeds file uuid from parse*.py output to gdc-client instead of manifest

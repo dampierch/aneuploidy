@@ -1,7 +1,7 @@
 ## Snakefile
 
 
-    ## module load snakemake/5.2.2
+    ## module load snakemake/5.2.2 (also loads anaconda and python3)
     ## snakemake -np TARGET
 
 
@@ -9,7 +9,8 @@
 anno = '/scratch/chd5n/aneuploidy/raw-data/annotations/'
 
 
-rule write_annotation:
+## rules
+rule write_annotations:
     input:
         'gdc_write_anno.py'
     output:
@@ -18,8 +19,19 @@ rule write_annotation:
     shell:
         'python {input}'
 
+rule parse_info:
+    input:
+        'gdc_parse_info.py'
+    output:
+        anno + 'coad-read.file_info',
+        anno + 'coad-read.sub_errors'
+    shell:
+        'python {input}'
 
-
+rule download:
+    input:
+    output:
+    shell:
 
 
 # ## example format

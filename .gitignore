@@ -1,3 +1,4 @@
 logs/
 private/
 scripts/__pycache__/
+scripts/.snakemake/
