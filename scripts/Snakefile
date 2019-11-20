@@ -5,8 +5,16 @@
     ## snakemake -np TARGET
 
 
+from datetime import datetime
+
+
 ## globals
 anno = '/scratch/chd5n/aneuploidy/raw-data/annotations/'
+seq = '/scratch/chd5n/aneuploidy/raw-data/sequencing/'
+plot = '/scratch/chd5n/aneuploidy/results/plots/'
+hetdat = '/scratch/chd5n/aneuploidy/hetsites-data/'
+dt = '_'.join([str(datetime.now()).split(' ')[0], ''.join(str(datetime.now()).split(' ')[1].split('.')[0].split(':')[0:3])])
+set_num = 1  ## touch gdc_download.py to download next batch
 
 
 ## rules
@@ -19,27 +27,77 @@ rule write_annotations:
     shell:
         'python {input}'
 
+
 rule parse_info:
     input:
-        'gdc_parse_info.py'
+        parse = 'gdc_parse_info.py',
+        prior_flag = anno + 'pheno.tsv'
     output:
         anno + 'coad-read.file_info',
         anno + 'coad-read.sub_errors'
     shell:
-        'python {input}'
+        'python {input.parse}'
+
 
 rule download:
     input:
+        dld = 'gdc_download.py',
+        prior_flag = anno + 'coad-read.file_info'
     output:
+        seq + 'latest_download.txt'
     shell:
+        'nohup python {input.dld} --set_num {set_num} > ../logs/gdc_download_set_{set_num}_{dt}.out 2> ../logs/gdc_download_set_{set_num}_{dt}.err'
 
 
-# ## example format
-# rule write_annotation:
-#     input:
-#         "data/genome.fa",
-#         "data/samples/A.fastq"
-#     output:
-#         "mapped_reads/A.bam"
-#     shell:
-#         "bwa mem {input} | samtools view -Sb - > {output}"
+rule assemble_files:
+    input:
+        assemble = 'gdc_assemble_files.py',
+        prior_flag = seq + 'latest_download.txt'
+    output:
+        anno + 'coad-read_current.file_set',
+        anno + 'coad-read_current.file_err'
+    shell:
+        'python {input.assemble} --set_num {set_num} --datetime {dt}'
+
+
+rule call_variants:
+    input:
+        gatk = 'run_gatk_haplo.py',
+        file_set = anno + 'coad-read_current.file_set'
+    output:
+        seq + 'latest_gatk_haplo.txt'
+    shell:
+        'python {input.gatk} --in_file {input.file_set}'
+
+
+rule count_hetsites:
+    input:
+        hetcount = 'run_het_counter.py',
+        file_set = anno + 'coad-read_current.file_set',
+        prior_flag = seq + 'latest_gatk_haplo.txt'
+    output:
+        seq + 'latest_het_counts.txt'
+    shell:
+        'python {input.hetcount} --in_file {input.file_set}'
+
+
+rule make_density_plots:
+    input:
+        plotter = 'run_plotter.py',
+        file_set = anno + 'coad-read_current.file_set',
+        prior_flag = seq + 'latest_het_counts.txt'
+    output:
+        plot + 'coad-read_current_hetcnts_plot.pdf'
+    shell:
+        'python {input.plotter} --in_file {input.file_set} --single_sub False --subject_id TCGA-AF-3400 --set_num {set_num} --datetime {dt}'
+
+
+rule store_hetsite_data:
+    input:
+        store = 'store_hetsite_data.py',
+        file_set = anno + 'coad-read_current.file_set',
+        prior_flag = plot + 'coad-read_current_hetcnts_plot.pdf'
+    output:
+        hetdat + 'latest_data.txt'
+    shell:
+        'python {input.store} --in_file {input.file_set} --set_num {set_num} --datetime {dt}'

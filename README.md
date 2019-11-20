@@ -34,7 +34,8 @@ An investigation into the drivers of CIN in CRC using TCGA WXS.
 
 #### CHD::use WRP download strategy (can't use bulk download anyway due to not enough storage space)
 * first try 9/25/2019 on first ten pairs (20 samples) in coad-read.file_info
-* [gdc_download.bash](scripts/gdc_download.bash)
+* old: `gdc_download.bash`
+* update: [gdc_download.py](scripts/gdc_download.py)
 
 ```
 dt=`date +"%Y-%m-%d"`
@@ -48,7 +49,8 @@ nohup bash ~/projects/aneuploidy/scripts/gdc_download.bash > ~/projects/aneuploi
 * need to move bai files as well, because later pysam will need them
 
 #### CHD::check and assemble files for analysis
-* [assemble_gdc_files.py](scripts/assemble_gdc_files.py)
+* old: `assemble_gdc_files.py`
+* [gdc_assemble_files.py](scripts/gdc_assemble_files.py)
 
 ### WRP:Identify heterozygous sites and count reads there
 * de-duplication is assumed to have been done by GDC
@@ -131,7 +133,7 @@ tar xvzf GRCh38.d1.vd1.fa.tar.gz
 * create dict and index for reference genome
 * run gatk_haplo
   1. [run_gatk_haplo.py](scripts/run_gatk_haplo.py)
-  2. [gatk_haplo.bash](scripts/gatk_haplo.bash)
+  2. [gatk_haplo.sh](scripts/gatk_haplo.sh)
 
 ```
 cd ~/projects/aneuploidy/scripts
@@ -213,14 +215,10 @@ grep 'tumor missing' *_R_missing.err | wc -l
 
 * with qd_thresh in find_hetsites set to 5 and cov_thresh in count_hetalleles set to 20, first_10_pairs had:
 
-| cov_thresh | tissue type | errcnts | hetcnts | R missing |
-| :--: | :--: | :--: | :--: | :--: |
-| x | normal |
-| x | tumor |
-| x | normal |
-| x | tumor |
-| x | normal |
-| x | tumor |
+| tissue type | errcnts | hetcnts | R missing |
+| :--: | :--: | :--: | :--: |
+| normal | 15764 | 155493 | 3503 |
+| tumor | 28820 | 142437 | 29298 |
 
 ##### CHD:optimal dp_thresh (i.e. cov_thresh)
 * will be related to coverage; see [run_coverage_checker.py](scripts/run_coverage_checker.py), [coverage_checker.sh](scripts/coverage_checker.sh), and [coverage_checker.py](scripts/coverage_checker.py)
@@ -245,7 +243,11 @@ grep 'tumor missing' *_R_missing.err | wc -l
 /scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/TCGA-AF-3400-01A-01D-1989-10_gapfillers_Illumina_gdc_realn.bam
 
 ### msi status
-* developing gdc_requests_msi.py; see [gdc_requests_files.py](scripts/gdc_requests_files.py) for now
+* solved with [gdc_requests_legacy.py](scripts/gdc_requests_legacy.py)
+
+### snakemake pipeline
+* should be ready to go: [Snakefile](scripts/Snakefile)...
+* trying set 1 2019-11-20: download...
 
 
 
