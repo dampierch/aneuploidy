@@ -247,7 +247,11 @@ grep 'tumor missing' *_R_missing.err | wc -l
 
 ### snakemake pipeline
 * should be ready to go: [Snakefile](scripts/Snakefile)...
-* trying set 1 2019-11-20: download...
+* trying set 1
+  1. start 2019-11-20: download worked, 20 in 2 hours
+  2. assemble_files worked (3sec)
+  3. call_variants worked (1h 40m)
+  4. count_hetsites...
 
 
 
