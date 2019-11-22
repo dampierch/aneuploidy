@@ -14,7 +14,7 @@ seq = '/scratch/chd5n/aneuploidy/raw-data/sequencing/'
 plot = '/scratch/chd5n/aneuploidy/results/plots/'
 hetdat = '/scratch/chd5n/aneuploidy/hetsites-data/'
 dt = '_'.join([str(datetime.now()).split(' ')[0], ''.join(str(datetime.now()).split(' ')[1].split('.')[0].split(':')[0:3])])
-set_num = 1  ## touch gdc_download.py to download next batch
+set_num = 2  ## touch gdc_download.py to download next batch
 
 
 ## rules
@@ -89,7 +89,7 @@ rule make_density_plots:
     output:
         plot + 'coad-read_current_hetcnts_plot.pdf'
     shell:
-        'python {input.plotter} --in_file {input.file_set} --single_sub False --subject_id TCGA-AF-3400 --set_num {set_num} --datetime {dt}'
+        'python {input.plotter} --in_file {input.file_set} --set_num {set_num} --datetime {dt}'
 
 
 rule store_hetsite_data:

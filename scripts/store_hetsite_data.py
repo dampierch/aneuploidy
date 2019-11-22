@@ -13,44 +13,57 @@ import glob
 
 def get_filenames(input_file,crunch_path):
     '''
-    read subject_ids into list and get selected filenames with glob
+    read subject_ids into list and get selected filenames with glob; for
+    hetsites.bed and vcf files, need to use _gdc_realn prefix
     '''
     subject_ids = []
+    prefixes = []
     with open(input_file) as in_f:
         for line in in_f:
             if line[0] == '#':
                 continue
             subject_id, file_name_norm, file_name_tum = line.strip('\n').split('\t')
             subject_ids.append(subject_id)
-    beds = []
+            prefixes.append(file_name_norm.split('.')[0])
+            prefixes.append(file_name_tum.split('.')[0])
+    hts_beds = []
     vcfs = []
-    rcnts = []
     trash = []
+    cts_beds = []
+    rcnts = []
+    for pre in prefixes:
+        hts_fn = glob.glob(crunch_path + pre + '*hetsites.bed')
+        vcf_fn = glob.glob(crunch_path + pre + '*snp.indel.vcf')
+        hts_beds.append(hts_fn)
+        vcfs.append(vcf_fn)
+        trs_fn_list = []
+        for suf in ['bai','bam','idx']:
+            trs_fn_list = trs_fn_list + glob.glob(crunch_path + pre + '*' + suf)
+        trash.append(trs_fn_list)
     for id in subject_ids:
         bed_fn_list = []
-        for suf in ['hetsites.bed','errcnts.bed','hetcnts.bed']:
+        for suf in ['errcnts.bed','hetcnts.bed']:
             bed_fn = glob.glob(crunch_path + id + '*' + suf)
             bed_fn_list = bed_fn_list + bed_fn
-        vcf_fn = glob.glob(crunch_path + id + '*snp.indel.vcf')
         rcnt_fn_list = []
         for suf in ['cnts2R.tsv','R_missing.err']:
             rcnt_fn = glob.glob(crunch_path + id + '*' + suf)
             rcnt_fn_list = rcnt_fn_list + rcnt_fn
-        tr_fn = []
-        for suf in ['bai','bam','idx']:
-            tr_fn = tr_fn + glob.glob(crunch_path + id + '*' + suf)
-        beds.append(bed_fn_list)
-        vcfs.append(vcf_fn)
+        # tr_fn = []
+        # for suf in ['bai','bam','idx']:
+        #     tr_fn = tr_fn + glob.glob(crunch_path + id + '*' + suf)
+        cts_beds.append(bed_fn_list)
         rcnts.append(rcnt_fn_list)
-        trash.append(tr_fn)
-    return beds,vcfs,rcnts,trash,subject_ids
+        # trash.append(tr_fn)
+    return hts_beds,vcfs,trash,cts_beds,rcnts,subject_ids
 
 
-def store_files(storage_path,beds,vcfs,rcnts,trash):
+def store_files(storage_path,hts_beds,vcfs,trash,cts_beds,rcnts):
     '''
-    move selected output files to storage directory
+    move selected output files to storage directory and remove selected trash
+    files
     '''
-    for set in beds:
+    for set in hts_beds:
         for file in set:
             cmd = 'mv %s %s%s/' % (file,storage_path,'bed-files')
             subprocess.call(cmd, shell=True)
@@ -58,13 +71,17 @@ def store_files(storage_path,beds,vcfs,rcnts,trash):
         for file in set:
             cmd = 'mv %s %s%s/' % (file,storage_path,'vcf-files')
             subprocess.call(cmd, shell=True)
-    for set in rcnts:
-        for file in set:
-            cmd = 'mv %s %s%s/' % (file,storage_path,'r-cnts')
-            subprocess.call(cmd, shell=True)
     for set in trash:
         for file in set:
             cmd = 'rm %s' % (file)
+            subprocess.call(cmd, shell=True)
+    for set in cts_beds:
+        for file in set:
+            cmd = 'mv %s %s%s/' % (file,storage_path,'bed-files')
+            subprocess.call(cmd, shell=True)
+    for set in rcnts:
+        for file in set:
+            cmd = 'mv %s %s%s/' % (file,storage_path,'r-cnts')
             subprocess.call(cmd, shell=True)
 
 
@@ -88,8 +105,8 @@ def main(args):
     storage_path = '/scratch/chd5n/aneuploidy/hetsites-data/'
     output_file = storage_path + '_'.join(['coad-read_set', set_num, dt + '.txt'])
     output_latest = storage_path + 'latest_data.txt'
-    beds,vcfs,rcnts,trash,subject_ids = get_filenames(input_file,crunch_path)
-    store_files(storage_path,beds,vcfs,rcnts,trash)
+    hts_beds,vcfs,trash,cts_beds,rcnts,subject_ids = get_filenames(input_file,crunch_path)
+    store_files(storage_path,hts_beds,vcfs,trash,cts_beds,rcnts)
     write_status(output_file,subject_ids)
     set_latest(output_file,output_latest)
 

@@ -12,12 +12,8 @@ library("cowplot")
 library("reshape2")
 
 ref_dir <- "/scratch/chd5n/Reference_genome/"
-proj_home <- "/scratch/chd5n/aneuploidy/"
-data_dir <- paste0(proj_home,"raw-data/")
-seq_dir <- paste0(data_dir,"sequencing/")
-crunch_dir <- paste0(seq_dir,"crunch/")
-plot_dir <- paste0(proj_home,"results/plots/")
-anno_dir <- paste0(data_dir,"annotations/")
+crunch_dir <- "/scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/"
+plot_dir <- "/scratch/chd5n/aneuploidy/results/plots/"
 
 args <- commandArgs(trailingOnly=TRUE)
 if (any(grepl("file_set", args))) {
@@ -34,7 +30,7 @@ row.names(hg38.offsets) <- levels(hg38.offsets$chrom)
 
 ## load vector of subjects to iterate over
 if (any(grepl("file_set", args))) {
-  file <- paste0(anno_dir,set_name)
+  file <- set_name
   file_set <- read.table(file=file, sep="\t", header=FALSE, col.names=c("subject_id","normal","tumor"))
   subjects <- as.character(file_set$subject_id)
 }
@@ -109,7 +105,8 @@ setwd(plot_dir)
 if (nlevels(good_het_data$subject_id) < 2) {
   file <- paste0(levels(good_het_data$subject_id),"_hetcnts_plot.pdf")
 } else {
-  file <- paste0(unlist(strsplit(set_name,"\\."))[1],"_hetcnts_plot.pdf")
+  fn <- unlist(strsplit(unlist(strsplit(set_name,"\\."))[1],"/"))[length(unlist(strsplit(unlist(strsplit(set_name,"\\."))[1],"/")))]
+  file <- paste0(fn,"_hetcnts_plot.pdf")
 }
 pdf(file=file,width=p_width,height=p_height)
 

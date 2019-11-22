@@ -251,8 +251,20 @@ grep 'tumor missing' *_R_missing.err | wc -l
   1. start 2019-11-20: download worked, 20 in 2 hours
   2. assemble_files worked (3sec)
   3. call_variants worked (1h 40m)
-  4. count_hetsites...
+  4. count_hetsites worked (50m)
+  5. make_density_plots worked after bug fix (9sec)
+  6. store_hetsite_data ... may be working...bug probably fixed...need to see set 2
 
+### sets processed
+
+| set | download | assemble | variants | hetsites | plots | store |
+| :--: | :--: | :--: | :--: | :--: | :--: | :--: |
+| 1 | x | x | x | x | X | x |
+| 2 | . |  |  |  |  |  |
+| 3 |  |  |  |  |  |  |
+| 4 |  |  |  |  |  |  |
+| 5 |  |  |  |  |  |  |
+| 6 |  |  |  |  |  |  |
 
 
 ## early thoughts
