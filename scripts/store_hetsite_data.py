@@ -49,12 +49,8 @@ def get_filenames(input_file,crunch_path):
         for suf in ['cnts2R.tsv','R_missing.err']:
             rcnt_fn = glob.glob(crunch_path + id + '*' + suf)
             rcnt_fn_list = rcnt_fn_list + rcnt_fn
-        # tr_fn = []
-        # for suf in ['bai','bam','idx']:
-        #     tr_fn = tr_fn + glob.glob(crunch_path + id + '*' + suf)
         cts_beds.append(bed_fn_list)
         rcnts.append(rcnt_fn_list)
-        # trash.append(tr_fn)
     return hts_beds,vcfs,trash,cts_beds,rcnts,subject_ids
 
 
@@ -103,7 +99,7 @@ def main(args):
     seq_home = data_home + 'raw-data/sequencing/'
     crunch_path = seq_home + 'crunch/'
     storage_path = '/scratch/chd5n/aneuploidy/hetsites-data/'
-    output_file = storage_path + '_'.join(['coad-read_set', set_num, dt + '.txt'])
+    output_file = storage_path + '_'.join(['coad-read_set', set_num + 'v2', dt + '.txt'])
     output_latest = storage_path + 'latest_data.txt'
     hts_beds,vcfs,trash,cts_beds,rcnts,subject_ids = get_filenames(input_file,crunch_path)
     store_files(storage_path,hts_beds,vcfs,trash,cts_beds,rcnts)

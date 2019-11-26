@@ -8,7 +8,7 @@
 #SBATCH --time=2:00:00
 #SBATCH --partition=standard
 #SBATCH --account=chd5n_alloc
-#SBATCH --mail-type=ALL
+#SBATCH --mail-type=END
 #SBATCH --mail-user=chd5n@virginia.edu
 
 ################

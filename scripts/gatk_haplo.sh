@@ -8,7 +8,7 @@
 #SBATCH --time=5:00:00
 #SBATCH --partition=standard
 #SBATCH --account=chd5n_alloc
-#SBATCH --mail-type=ALL
+#SBATCH --mail-type=END
 #SBATCH --mail-user=chd5n@virginia.edu
 
 ## wrp uses #SBATCH --cpus-per-task 16

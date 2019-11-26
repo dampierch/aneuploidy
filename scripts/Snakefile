@@ -14,7 +14,8 @@ seq = '/scratch/chd5n/aneuploidy/raw-data/sequencing/'
 plot = '/scratch/chd5n/aneuploidy/results/plots/'
 hetdat = '/scratch/chd5n/aneuploidy/hetsites-data/'
 dt = '_'.join([str(datetime.now()).split(' ')[0], ''.join(str(datetime.now()).split(' ')[1].split('.')[0].split(':')[0:3])])
-set_num = 5  ## touch gdc_download.py to download next batch
+set_num = 3  ## touch gdc_download.py to download next batch
+v_num = 'v2'  ## set_size in gdc_download 100 in v2 from 20 in v1 to get 50 pairs instead of 10
 
 
 ## rules
@@ -46,7 +47,7 @@ rule download:
     output:
         seq + 'latest_download.txt'
     shell:
-        'nohup python {input.dld} --set_num {set_num} > ../logs/gdc_download_set_{set_num}_{dt}.out 2> ../logs/gdc_download_set_{set_num}_{dt}.err'
+        'nohup python {input.dld} --set_num {set_num} > ../logs/gdc_download_set_{set_num}{v_num}_{dt}.out 2> ../logs/gdc_download_set_{set_num}{v_num}_{dt}.err'
 
 
 rule assemble_files:

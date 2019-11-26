@@ -99,6 +99,11 @@ if (nlevels(het_data$subject_id) > 9) {
   leg.pos <- c(0.025,0.98)
   leg.just <- c(0,0)
 }
+if (nlevels(het_data$subject_id) > 25) {
+  p_height <- 200
+  leg.pos <- c(0.025,0.995)
+  leg.just <- c(0,0)
+}
 
 ## make plot
 setwd(plot_dir)

@@ -65,9 +65,9 @@ def assemble_files(download_path,sub,crunch_path):
     must include bai for pysam pileup
     '''
     cmd_n_bam = 'mv %s/%s %s' % (download_path + sub['have_normal']['uuid'], sub['have_normal']['name'], crunch_path)
-    cmd_n_bai = 'mv %s/%s %s' % (download_path + sub['have_normal']['uuid'], sub['have_normal']['name'].split('.')[0] + '.bai', crunch_path)
+    cmd_n_bai = 'mv %s/%s %s' % (download_path + sub['have_normal']['uuid'], sub['have_normal']['name'].split('.bam')[0] + '.bai', crunch_path)
     cmd_t_bam = 'mv %s/%s %s' % (download_path + sub['have_tumor']['uuid'], sub['have_tumor']['name'], crunch_path)
-    cmd_t_bai = 'mv %s/%s %s' % (download_path + sub['have_tumor']['uuid'], sub['have_tumor']['name'].split('.')[0] + '.bai', crunch_path)
+    cmd_t_bai = 'mv %s/%s %s' % (download_path + sub['have_tumor']['uuid'], sub['have_tumor']['name'].split('.bam')[0] + '.bai', crunch_path)
     subprocess.call(cmd_n_bam, shell=True)
     subprocess.call(cmd_n_bai, shell=True)
     subprocess.call(cmd_t_bam, shell=True)
@@ -119,8 +119,8 @@ def main(args):
     download_path = seq_home + 'current_set/'
     crunch_path = seq_home + 'crunch/'
     input_file = anno_home + 'coad-read.file_info'
-    output_file = anno_home + '_'.join(['coad-read_set', set_num, dt + '.file_set'])
-    error_file = anno_home + '_'.join(['coad-read_set', set_num, dt + '.file_err'])
+    output_file = anno_home + '_'.join(['coad-read_set', set_num + 'v2', dt + '.file_set'])
+    error_file = anno_home + '_'.join(['coad-read_set', set_num + 'v2', dt + '.file_err'])
     subject_dict = get_file_info(input_file)
     problems = process_file_info(output_file,subject_dict,download_path,crunch_path)
     record_errors(error_file,problems)

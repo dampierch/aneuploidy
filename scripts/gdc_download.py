@@ -80,7 +80,7 @@ def main(set_num):
     in_file = anno_home + 'coad-read.file_info'
     dest = seq_home + 'current_set/'
     token = seq_home + 'gdc-user-token.2019-11-20T23_21_41.960Z.txt'
-    set_size = 20
+    set_size = 100
     set_num = int(set_num)
     downloaded_file = seq_home + 'latest_download.txt'
     ## take actions

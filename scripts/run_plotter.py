@@ -38,7 +38,7 @@ def main(args):
     shell_cmd(script_home,subject_id,file_set)
     plot_dir = '/scratch/chd5n/aneuploidy/results/plots/'
     fn_before = plot_dir + 'coad-read_current_hetcnts_plot.pdf'
-    fn_after = plot_dir + '_'.join(['coad-read_set', set_num, dt, 'hetcnts_plot.pdf'])
+    fn_after = plot_dir + '_'.join(['coad-read_set', set_num + 'v2', dt, 'hetcnts_plot.pdf'])
     copy_current(fn_before,fn_after)
 
 
