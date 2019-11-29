@@ -20,7 +20,7 @@
 ## process took >10GB on 4 threads for select samples
 ## process on 15GB slow for samples that went quickly on 10GB (e.g. AF 3400)
 ## should perhaps choose a memory limit at least as large as largest normal exome bam file (36GB set 1)
-## with 50GB, no errors, max 12.3GB, 2h
+## with 50GB, no errors, max 12.3GB, 3h
 
 
 module load gcc/7.1.0 bedtools/2.26.0 samtools/1.9 gatk/4.0.0.0

@@ -265,7 +265,7 @@ grep 'tumor missing' *_R_missing.err | wc -l
 | 4 | x | x | x | x | x | x |
 | 5 | x | x | x | x | x | x |
 | 2v2 | x | x | x | x | x | x |
-| 3v2 | . | . | . |  |  |  |
+| 3v2 | x | x | x | . |  |  |
 | 4v2 |  |  |  |  |  |  |
 | 5v2 |  |  |  |  |  |  |
 | 6v2 |  |  |  |  |  |  |
