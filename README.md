@@ -265,8 +265,8 @@ grep 'tumor missing' *_R_missing.err | wc -l
 | 4 | x | x | x | x | x | x |
 | 5 | x | x | x | x | x | x |
 | 2v2 | x | x | x | x | x | x |
-| 3v2 | x | x | x | . |  |  |
-| 4v2 |  |  |  |  |  |  |
+| 3v2 | x | x | x | x | x | x |
+| 4v2 | . | . | . |  |  |  |
 | 5v2 |  |  |  |  |  |  |
 | 6v2 |  |  |  |  |  |  |
 | 7v2 |  |  |  |  |  |  |
@@ -356,28 +356,3 @@ grep 'tumor missing' *_R_missing.err | wc -l
 | Custom V2 Exome Bait, 48 RXN X 16 tubes | 2 |
 | SeqCap EZ Exome V2.0 | 1 |
 | NaN | 15 |
-
-
-# Scratch space
-
-## R code for GDC TCGA API
-        # if(json$data$pagination$count == 0) {
-        #     url <- getGDCquery(project = proj,
-        #                        data.category = data.category,
-        #                        data.type = data.type,
-        #                        legacy = legacy,
-        #                        workflow.type = NA,
-        #                        platform = NA,
-        #                        file.type = file.type,
-        #                        experimental.strategy = experimental.strategy,
-        #                        files.access = access,
-        #                        sample.type = sample.type)
-        #     json  <- tryCatch(
-        #         getURL(url,fromJSON,timeout(600),simplifyDataFrame = TRUE),
-        #         error = function(e) {
-        #             message(paste("Error: ", e, sep = " "))
-        #             message("We will retry to access GDC!")
-        #             fromJSON(content(getURL(url,GET,timeout(600)), as = "text", encoding = "UTF-8"), simplifyDataFrame = TRUE)
-        #         }
-        #     )
-        # }
