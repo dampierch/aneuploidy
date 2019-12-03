@@ -70,17 +70,28 @@ echo "sacct -o reqmem,maxrss,elapsed,alloccpus -j ${SLURM_JOBID}"
 
 # ## trouble-shooting
 # cd projects/aneuploidy/scripts/
-# awk 'NR==2 || FNR==2 {print $1}' het_count_TCGA-*.out > het_count_set_3v2_01_done.out
+# ## list those that ran
+# awk 'NR==2 || FNR==2 {print $1}' het_count_TCGA-*.out > het_count_set_4v2_01_done.out
+# ## list those that failed to run
 # for each in $(</scratch/chd5n/aneuploidy/raw-data/sequencing/latest_het_counts.txt); do
-#   if grep -q "${each}" het_count_set_3v2_01_done.out; then
+#   if grep -q "${each}" het_count_set_4v2_01_done.out; then
 #     :
 #   else
 #     echo ${each}
 #   fi
-# done > het_count_set_3v2_01_undone.out
+# done > het_count_set_4v2_01_undone.out
+# ## list those that ran but failed
+# for i in het_count_TCGA-*.out; do
+#   if grep -q 'error' ${i}; then
+#     echo ${i} | awk -v FS="_" '{print substr($3,1,12)}'
+#   fi
+# done > het_count_set_4v2_01_error.out
+# ## set index for redo
+# cat het_count_set_4v2_01_undone.out het_count_set_4v2_01_error.out > het_count_set_4v2_02_idx.out
+# ## run again
 # file_set=/scratch/chd5n/aneuploidy/raw-data/annotations/coad-read_current.file_set
 # crunch_path=/scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/
-# for each in $(<het_count_set_3v2_01_undone.out); do
+# for each in $(<het_count_set_4v2_02_idx.out); do
 #   out_set="--output=het_count_${each}.out"
 #   file_name_norm=`grep "${each}" ${file_set} | awk '{print $2}'`
 #   file_name_tum=`grep "${each}" ${file_set} | awk '{print $3}'`
