@@ -5,7 +5,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=50000
-#SBATCH --time=5:00:00
+#SBATCH --time=6:00:00
 #SBATCH --partition=standard
 #SBATCH --account=chd5n_alloc
 #SBATCH --mail-type=END
