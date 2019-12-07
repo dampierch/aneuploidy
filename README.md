@@ -271,8 +271,8 @@ grep 'tumor missing' *_R_missing.err | wc -l
 | 6v2 | x | x | x | x | x | x |
 | 7v2 | x | x | x | x | x | x |  ... TCGA-AG-3999 looks bad, TCGA-DY-A1DG LOH
 | 8v2 | x | x | x | x | x | x |  ...TCGA-AG-4007 looks bad
-| 9v2 | . | . | . |  |  |  |
-| 10v2 |  |  |  |  |  |  |
+| 9v2 | x | x | x | x | x | x |  ...TCGA-AG-A00H looks weird, TCGA-DM-A1HA LOH
+| 10v2 | . | . | . |  |  |  |
 | 11v2 |  |  |  |  |  |  |
 | 12v2 |  |  |  |  |  |  |
 
