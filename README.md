@@ -274,7 +274,7 @@ grep 'tumor missing' *_R_missing.err | wc -l
 | 9v2 | x | x | x | x | x | x | TCGA-DM-A1HA | TCGA-AG-A00H |
 | 10v2 | x | x | x | x | x | x |  |  |
 | 11v2 | x | x | x | x | x | x |  |  |
-| 12v2 |  |  |  |  |  |  |  |  |
+| 12v2 | . | . | . |  |  |  |  |  |
 
 
 ## early thoughts
