@@ -257,24 +257,24 @@ grep 'tumor missing' *_R_missing.err | wc -l
 
 ### sets processed
 
-| set | download | assemble | variants | hetsites | plots | store |
-| :--: | :--: | :--: | :--: | :--: | :--: | :--: |
-| 1 | x | x | x | x | x | x |
-| 2 | x | x | x | x | x | x |
-| 3 | x | x | x | x | x | x |
-| 4 | x | x | x | x | x | x |
-| 5 | x | x | x | x | x | x |
-| 2v2 | x | x | x | x | x | x |
-| 3v2 | x | x | x | x | x | x |
-| 4v2 | x | x | x | x | x | x |  ... TCGA-AG-4005 looks bad
-| 5v2 | x | x | x | x | x | x |  ... TCGA-CK-5912, TCGA-DM-A1DA LOH, TCGA-AG-4001 looks bad
-| 6v2 | x | x | x | x | x | x |
-| 7v2 | x | x | x | x | x | x |  ... TCGA-AG-3999 looks bad, TCGA-DY-A1DG LOH
-| 8v2 | x | x | x | x | x | x |  ...TCGA-AG-4007 looks bad
-| 9v2 | x | x | x | x | x | x |  ...TCGA-AG-A00H looks weird, TCGA-DM-A1HA LOH
-| 10v2 | . | . | . |  |  |  |
-| 11v2 |  |  |  |  |  |  |
-| 12v2 |  |  |  |  |  |  |
+| set | download | assemble | variants | hetsites | plots | store | LOH | trouble |
+| :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: |
+| 1 | x | x | x | x | x | x |  |  |
+| 2 | x | x | x | x | x | x |  |  |
+| 3 | x | x | x | x | x | x |  |  |
+| 4 | x | x | x | x | x | x |  |  |
+| 5 | x | x | x | x | x | x |  |  |
+| 2v2 | x | x | x | x | x | x |  |  |
+| 3v2 | x | x | x | x | x | x |  |  |
+| 4v2 | x | x | x | x | x | x |  | TCGA-AG-4005 |
+| 5v2 | x | x | x | x | x | x | TCGA-CK-5912, TCGA-DM-A1DA | TCGA-AG-4001 |
+| 6v2 | x | x | x | x | x | x |  |  |
+| 7v2 | x | x | x | x | x | x | TCGA-DY-A1DG | TCGA-AG-3999 |
+| 8v2 | x | x | x | x | x | x |  | TCGA-AG-4007 |
+| 9v2 | x | x | x | x | x | x | TCGA-DM-A1HA | TCGA-AG-A00H |
+| 10v2 | x | x | x | x | x | x |  |  |
+| 11v2 | x | x | x | x | x | x |  |  |
+| 12v2 |  |  |  |  |  |  |  |  |
 
 
 ## early thoughts
