@@ -51,6 +51,8 @@ def download_files(uuid_sets,set_num,gdc_home,dest,token,uuids_undone):
     file_count = 0
     if set_num == 12:
         targets = uuids_undone
+    elif set_num == 13:
+        targets = ['97401027-5a1a-498f-b256-004b28b9db44','afd08843-c655-45d4-873d-a31c826b1727']
     else:
         targets = uuid_sets[set_num]
     for uuid in targets:
@@ -70,6 +72,8 @@ def write_downloaded(downloaded_file,uuid_sets,set_num,uuids_undone):
         line1 = ' '.join(['most recent set number downloaded:',str(set_num)]) + '\n'
         if set_num == 12:
             line2 = ' '.join(uuids_undone) + '\n'
+        elif set_num == 13:
+            line2 = ' '.join(['97401027-5a1a-498f-b256-004b28b9db44','afd08843-c655-45d4-873d-a31c826b1727']) + '\n'
         else:
             line2 = ' '.join(uuid_sets[set_num]) + '\n'
         out_file.write(line1+line2)
@@ -87,7 +91,7 @@ def main(set_num):
     seq_home = aneuploidy_home + 'raw-data/sequencing/'
     in_file = anno_home + 'coad-read.file_info'
     dest = seq_home + 'current_set/'
-    token = seq_home + 'gdc-user-token.2019-11-20T23_21_41.960Z.txt'
+    token = seq_home + 'gdc-user-token.2020-01-06T02_18_41.663Z.txt'
     set_size = 100
     set_num = int(set_num)
     downloaded_file = seq_home + 'latest_download.txt'

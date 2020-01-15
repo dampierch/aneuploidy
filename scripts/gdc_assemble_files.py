@@ -119,8 +119,8 @@ def main(args):
     download_path = seq_home + 'current_set/'
     crunch_path = seq_home + 'crunch/'
     input_file = anno_home + 'coad-read.file_info'
-    output_file = anno_home + '_'.join(['coad-read_set', set_num + 'v2', dt + '.file_set'])
-    error_file = anno_home + '_'.join(['coad-read_set', set_num + 'v2', dt + '.file_err'])
+    output_file = anno_home + '_'.join(['coad-read_set', set_num + 'v3', dt + '.file_set'])
+    error_file = anno_home + '_'.join(['coad-read_set', set_num + 'v3', dt + '.file_err'])
     subject_dict = get_file_info(input_file)
     problems = process_file_info(output_file,subject_dict,download_path,crunch_path)
     record_errors(error_file,problems)

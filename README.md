@@ -271,12 +271,15 @@ grep 'tumor missing' *_R_missing.err | wc -l
 | 6v2 | x | x | x | x | x | x |  |  |
 | 7v2 | x | x | x | x | x | x | TCGA-DY-A1DG | TCGA-AG-3999 |
 | 8v2 | x | x | x | x | x | x |  | TCGA-AG-4007 |
-| 9v2 | x | x | x | x | x | x | TCGA-DM-A1HA | TCGA-AG-A00H |
+| 9v2 | x | x | x | x | x | x | TCGA-DM-A1HA | TCGA-AG-A00H | ... problem with TCGA-AA-3866
 | 10v2 | x | x | x | x | x | x |  |  |
 | 11v2 | x | x | x | x | x | x |  |  |
 | 12v2 | x | x | x | x | x | x |  |  |
 
 Total: 587 pairs (1174 WXS files) processed
+
+TCGA-AA-3866 TCGA-AA-3866-10A-01W-0995-10_hg19_Illumina_gdc_realn.bam TCGA-AA-3866-01A-01W-0995-10_hg19_Illumina_gdc_realn.bam
+>> get new token and execute pipeline from download to end
 
 ## early thoughts
 
