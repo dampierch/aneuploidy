@@ -11,11 +11,13 @@ from datetime import datetime
 ## globals
 anno = '/scratch/chd5n/aneuploidy/raw-data/annotations/'
 seq = '/scratch/chd5n/aneuploidy/raw-data/sequencing/'
+count = '/scratch/chd5n/aneuploidy/raw-data/counts/'
 plot = '/scratch/chd5n/aneuploidy/results/plots/'
 hetdat = '/scratch/chd5n/aneuploidy/hetsites-data/'
 dt = '_'.join([str(datetime.now()).split(' ')[0], ''.join(str(datetime.now()).split(' ')[1].split('.')[0].split(':')[0:3])])
 set_num = 13  ## touch gdc_download.py to download next batch
 v_num = 'v3'  ## set_size in gdc_download 100 in v2 from 20 in v1 to get 50 pairs instead of 10; v3 is custom run to fix errors
+rna_set_name = 'simple'
 
 
 ## rules
@@ -102,3 +104,20 @@ rule store_hetsite_data:
         hetdat + 'latest_data.txt'
     shell:
         'python {input.store} --in_file {input.file_set} --set_num {set_num} --datetime {dt}'
+
+
+# rule rank_by_sd:
+#     input:
+#         rank = 'rank_sd.R'
+
+rule prep_de:
+    input:
+        dld = 'prep_de.py'
+    output:
+        count + 'latest_download.txt'
+    shell:
+        'nohup python {input.dld} --set_name {rna_set_name} > ../logs/prep_de_set_{rna_set_name}_{dt}.out 2> ../logs/prep_de_set_{rna_set_name}_{dt}.err'
+
+
+
+# rule differential_expression:

@@ -93,3 +93,22 @@ def main():
 
 
 main()
+
+
+
+
+# ## for testing
+# file_info = pd.read_csv('/scratch/chd5n/aneuploidy/raw-data/annotations/coad-read.file_info',sep='\t',names=['subject_id','tissue_type','file_name','file_id'])
+# for sub in sub_dict.keys():
+#     if len(sub_dict[sub]['normal']) > 0 and len(sub_dict[sub]['tumor']) > 0:
+#         df_norm = pd.DataFrame(sub_dict[sub]['normal'])
+#         df_tum = pd.DataFrame(sub_dict[sub]['tumor'])
+#         norm_select = df_norm['total_seq']==df_norm['total_seq'].max()
+#         tum_select = df_tum['total_seq']==df_tum['total_seq'].max()
+#         norm = df_norm.loc[norm_select, print_fields].values.tolist()[0]
+#         tum = df_tum.loc[tum_select, print_fields].values.tolist()[0]
+#         fi_ss = file_info.loc[file_info['subject_id']==sub,:]
+#         if list(norm[-1]==fi_ss.loc[fi_ss['tissue_type']=='normal','file_id'])[0] and list(tum[-1]==fi_ss.loc[fi_ss['tissue_type']=='tumor','file_id'])[0]:
+#             pass
+#         else:
+#             print('problem with',sub)

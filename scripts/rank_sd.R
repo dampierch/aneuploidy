@@ -51,7 +51,7 @@ get_rank_results <- function() {
   filename <- "/scratch/chd5n/aneuploidy/results/tables/tumors_sd_rank.R"
   save(tumors_sd_rank,file=filename)
   filename <- "/scratch/chd5n/aneuploidy/results/tables/tumors_sd_rank.csv"
-  write.csv(tumors_sd_rank,file=filename)
+  write.csv(tumors_sd_rank,file=filename,quote=FALSE,row.names=FALSE)
   return(tumors_sd_rank)
 }
 
@@ -83,6 +83,26 @@ plot_ranks <- function(tumors_sd_rank) {
   filename <- "/scratch/chd5n/aneuploidy/results/plots/tumors_sd_rank.pdf"
   ggsave(filename, plot=pp, device=pdf(), path=NULL,
     scale=1, width=9, height=6, units=c("in"), dpi=300, limitsize=TRUE)
+  tumors_focus <- plot_df
+  filename <- "/scratch/chd5n/aneuploidy/results/tables/tumors_sd_rank_focus.Rdata"
+  save(tumors_focus,file=filename)
+  filename <- "/scratch/chd5n/aneuploidy/results/tables/tumors_sd_rank_focus.csv"
+  write.csv(tumors_focus,file=filename,quote=FALSE,row.names=FALSE)
+  return(tumors_focus)
+}
+
+
+prep_rna_dge_simple <- function(tumors_focus) {
+  keep <- tumors_focus$file_id_rna!=""
+  tumors_focus <- tumors_focus[keep,]
+  target_num <- round(nrow(tumors_focus)*(1/4))
+  upper <- tumors_focus[1:target_num,]
+  lower <- tumors_focus[(nrow(tumors_focus)-target_num+1):nrow(tumors_focus),]
+  upper$category <- "upper"
+  lower$category <- "lower"
+  simple_set <- rbind(upper,lower)
+  filename <- "/scratch/chd5n/aneuploidy/raw-data/annotations/rna_set_simple.csv"
+  write.csv(simple_set,file=filename,quote=FALSE,row.names=FALSE)
 }
 
 
@@ -93,7 +113,8 @@ main <- function() {
   } else {
     tumors_sd_rank <- get_rank_results()
   }
-  plot_ranks(tumors_sd_rank)
+  tumors_focus <- plot_ranks(tumors_sd_rank)
+  prep_rna_dge_simple(tumors_focus)
 }
 
 

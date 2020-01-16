@@ -12,49 +12,98 @@ import requests
 import re
 
 
-def set_filters():
+def set_filters(filter_type):
     '''
     set filters to target relevant units on endpoint; json format
     '''
-    filters = {
-        'op':'and',
-        'content':[
-            {'op':'or',
+    if filter_type == 'WXS':
+        filters = {
+            'op':'and',
             'content':[
+                {'op':'or',
+                'content':[
+                    {'op':'in',
+                    'content':{
+                        'field':'cases.project.project_id',
+                        'value':'TCGA-COAD'
+                    }
+                    },
+                    {'op': 'in',
+                    'content':{
+                        'field':'cases.project.project_id',
+                        'value':'TCGA-READ'
+                    }
+                    }
+                ]
+                },
                 {'op':'in',
                 'content':{
-                    'field':'cases.project.project_id',
-                    'value':'TCGA-COAD'
+                    'field':'cases.primary_site',
+                    'value':['Colon', 'Rectum', 'Rectosigmoid junction']
                 }
                 },
-                {'op': 'in',
+                {'op':'in',
                 'content':{
-                    'field':'cases.project.project_id',
-                    'value':'TCGA-READ'
+                    'field':'experimental_strategy',
+                    'value':'WXS'
+                }
+                },
+                {'op':'in',
+                'content':{
+                    'field':'data_category',
+                    'value':'Sequencing Reads'
                 }
                 }
             ]
-            },
-            {'op':'in',
-            'content':{
-                'field':'cases.primary_site',
-                'value':['Colon', 'Rectum', 'Rectosigmoid junction']
-            }
-            },
-            {'op':'in',
-            'content':{
-                'field':'experimental_strategy',
-                'value':'WXS'
-            }
-            },
-            {'op':'in',
-            'content':{
-                'field':'data_category',
-                'value':'Sequencing Reads'
-            }
-            }
-        ]
-    }
+        }
+    elif filter_type == 'RNA-Seq':
+        filters = {
+            'op':'and',
+            'content':[
+                {'op':'or',
+                'content':[
+                    {'op':'in',
+                    'content':{
+                        'field':'cases.project.project_id',
+                        'value':'TCGA-COAD'
+                    }
+                    },
+                    {'op': 'in',
+                    'content':{
+                        'field':'cases.project.project_id',
+                        'value':'TCGA-READ'
+                    }
+                    }
+                ]
+                },
+                {'op':'in',
+                'content':{
+                    'field':'cases.primary_site',
+                    'value':['Colon', 'Rectum', 'Rectosigmoid junction']
+                }
+                },
+                {'op':'in',
+                'content':{
+                    'field':'experimental_strategy',
+                    'value':'RNA-Seq'
+                }
+                },
+                {'op':'in',
+                'content':{
+                    'field':'data_category',
+                    'value':'Transcriptome Profiling'
+                }
+                },
+                {'op':'in',
+                'content':{
+                    'field':'analysis.workflow_type',
+                    'value':'HTSeq - Counts'
+                }
+                }
+            ]
+        }
+    else:
+        sys.exit('must enter valid filter_type (i.e. WXS,RNA-Seq)')
     filters = json.dumps(filters)
     return filters
 
@@ -151,8 +200,25 @@ def set_fields(field_type):
             'analysis.metadata.read_groups.target_capture_kit_name',
             'analysis.metadata.read_groups.target_capture_kit_vendor'
         ]
+    elif field_type == 'transcriptome':
+        fields = [
+            'file_name',
+            'file_id',
+            'cases.samples.sample_id'
+
+            # 'cases.case_id',  ## good
+            # 'file_size',  ## good
+            # 'state',  ## good
+            # 'md5sum',  ## good
+            # 'experimental_strategy', ## 'RNA-Seq'
+            # 'data_category',  ## 'Transcriptome Profiling'
+            # 'analysis.workflow_type',  ## 'HTSeq - Counts'
+            # 'cases.samples.is_ffpe',  ## good
+            # 'revision',  ## empty
+            # 'updated_datetime'  ## good but goes with project_id
+        ]
     else:
-        sys.exit('must enter valid field_type (i.e. default,depth,kits)')
+        sys.exit('must enter valid field_type (i.e. default, depth, kits, transcriptome)')
     fields = ','.join(fields)
     return fields
 
@@ -277,7 +343,7 @@ def fix_format(files_res):
 def main():
     endpoint = 'https://api.gdc.cancer.gov/files/'
     ## baseline files uuids and other info
-    filters = set_filters()
+    filters = set_filters('WXS')
     fields = set_fields('default')
     params = set_params(filters,fields)
     files_res = get_results(endpoint,params)
@@ -294,6 +360,16 @@ def main():
     files_res = files_res.merge(exome_kits, on='file_id')  ## merge files_res and exome_kits
     ## fix formatting
     files_res = fix_format(files_res)
+    ## add mRNA-seq gene count file_ids and file_names
+    filters = set_filters('RNA-Seq')
+    fields = set_fields('transcriptome')
+    params = set_params(filters,fields)
+    rna_res = get_results(endpoint,params)
+    rna_res.columns = ['file_name_rna', 'file_id_rna', 'id', 'sample_id']
+    select = ['file_name_rna', 'file_id_rna', 'sample_id']
+    rna_res = rna_res[select]
+    files_res = files_res.merge(rna_res, on='sample_id', how='left')
+    files_res = files_res.drop_duplicates('file_id')
     return files_res
 
 

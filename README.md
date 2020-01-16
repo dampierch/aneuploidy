@@ -278,9 +278,6 @@ grep 'tumor missing' *_R_missing.err | wc -l
 
 Total: 587 pairs (1174 WXS files) processed
 
-TCGA-AA-3866 TCGA-AA-3866-10A-01W-0995-10_hg19_Illumina_gdc_realn.bam TCGA-AA-3866-01A-01W-0995-10_hg19_Illumina_gdc_realn.bam
->> get new token and execute pipeline from download to end
-
 ## early thoughts
 
 ### Sample selection

@@ -42,7 +42,7 @@ def make_pheno(gdc_anno,anno_home):
     '''
     create pheno annotations object from gdc_anno and write to file
     '''
-    select = ['file_id', 'file_name', 'sample_id', 'case_id', 'submitter_id', 'subject_id', 'project_id', 'disease_type', 'primary_site', 'tissue_type', 'msi_status', 'birth_year', 'vital_status', 'age_at_index', 'days_to_death', 'height', 'weight', 'bmi', 'race', 'sex', 'hospital', 'is_ffpe', 'total_seq', 'capture_kit_name', 'capture_kit_vendor']
+    select = ['file_id', 'file_name', 'sample_id', 'case_id', 'submitter_id', 'subject_id', 'project_id', 'disease_type', 'primary_site', 'tissue_type', 'stage', 'msi_status', 'birth_year', 'vital_status', 'age_at_index', 'days_to_death', 'height', 'weight', 'bmi', 'race', 'sex', 'hospital', 'is_ffpe', 'total_seq', 'capture_kit_name', 'capture_kit_vendor', 'file_name_rna', 'file_id_rna']
     pheno = gdc_anno[select]
     pheno = pheno.sort_values(by=['file_id'])
     pheno.to_csv(anno_home + 'pheno.tsv', sep='\t', index=False)

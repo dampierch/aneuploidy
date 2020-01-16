@@ -15,16 +15,22 @@ def set_fields():
     set fields for extraction from endpoint
     '''
     fields = [
-        'submitter_id', # good
-        'case_id', # good
-        'disease_type' # good
-        # 'sample_ids' # ok
+        'submitter_id',  ## good
+        'case_id',  ## good
+        'disease_type',  ## good
+        'diagnoses.tumor_stage'  ## good
+        # 'sample_ids' ## ok
 
         # "submitter_analyte_ids", #?
         # "analyte_ids", #?
         # "portion_ids", #?
         # "submitter_portion_ids", #?
 
+        # 'diagnoses.tumor_grade',  ## 'not reported'
+        # 'exposures.alcohol_history',  ## 'Not Reported'
+        # 'exposures.alcohol_intensity',  ## empty
+        # 'exposures.cigarettes_per_day',  ## empty
+        # 'exposures.years_smoked'  ## empty
         # "days_to_index", # empty
         # 'samples.biospecimen_anatomic_site', # empty
         # 'samples.distance_normal_to_tumor', # empty
@@ -116,8 +122,8 @@ def main():
     fields = set_fields()
     params = set_params(filters,fields)
     cases_res = get_results(endpoint,params)
-    cases_res.columns = ['subject_id', 'case_id', 'id', 'disease_type']  ## change submitter_id to subject_id for consistency
-    select = ['subject_id', 'case_id', 'disease_type']
+    cases_res.columns = ['subject_id', 'stage', 'case_id', 'id', 'disease_type']  ## change submitter_id to subject_id for consistency; change diagnoses.0.tumor_stage to stage
+    select = ['subject_id', 'case_id', 'disease_type', 'stage']
     cases_res = cases_res[select]
     return cases_res
 
