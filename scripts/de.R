@@ -79,7 +79,7 @@ pca_single <- function(vsd, pcaData, percentVar, aes_name, set_name, plab) {
 }
 
 
-deseq2_explore <- function(dds,set_name,r_dir,plot_dir) {
+deseq_explore <- function(dds,set_name,r_dir,plot_dir) {
   cat(paste("exploring counts with DESeq2 for set",set_name),"\n\n")
   start_time <- Sys.time()
   ## prep data
@@ -129,7 +129,7 @@ deseq2_explore <- function(dds,set_name,r_dir,plot_dir) {
 }
 
 
-deseq2_naive <- function(dds,set_name,r_dir) {
+deseq_naive <- function(dds,set_name,r_dir) {
   cat(paste("fitting naive model with DESeq2 for set",set_name),"\n\n")
   start_time <- Sys.time()
   setwd(r_dir)
@@ -217,66 +217,66 @@ get_svs <- function(dds,set_name,choose_nsv=NULL) {
   }
 }
 
-##########################################
-deseq2_sva <- function(dds,bso,svs) {
+
+deseq_sva <- function(dds,set_name,svs,r_dir) {
   ## fit informed model
-  cat(paste("DESeq2 + SVA start",bso), "\n\n")
+  cat(paste("fitting model with svs for set",set_name), "\n\n")
   start_time <- Sys.time()
   ## check if sv-informed fit already calculated; if so, then load, if not, then calculate
+  setwd(r_dir)
   if (refine<1) {
-    setwd(r_dir)
-    file <- paste0(bso,"_ge_ddssva_svA.Rdata")
+    filename <- paste0(set_name,"_dds_sva_svA.Rdata")
   } else {
-    setwd(r_dir)
-    file <- paste0(bso,"_ge_ddssva_sv",choose_nsv,".Rdata")
+    filename <- paste0(set_name,"_dds_sva_sv",svs$n.sv,".Rdata")
   }
-  if (file.exists(file)) {
-    cat(paste(file,"already exists; loading prior..."), "\n\n")
-    lname <- load(file=file)
+  if (file.exists(filename)) {
+    cat(paste(filename,"already exists\nloading prior..."), "\n\n")
+    lname <- load(file=filename)
   } else {
-    cat(paste(file,"not found; running DESeq() now..."), "\n\n")
+    cat(paste(filename,"not found\nbuilding dds with svs now..."), "\n\n")
     ddssva <- dds  ## initiate data object
-    ## add svs and set deign matrix
+    ## add svs and set design matrix
     if (refine<1) {
       ## add num.sv svs to DESeq2 data object
-      cat(paste("Adding automatic svs to model..."), "\n\n")
+      cat("adding automatic svs to model...\n\n")
       ddssva$sv1 <- svs$sv[,1]
-      design(ddssva) <- ~ sv1 + master_id + tx_group  ## c("aspirin","calcium","meat")
-      if (bso %in% c("estrogen","folate","ethanol")) {  ## ethanol needs sv2 and another
+      design(ddssva) <- ~ sv1 + category  ## simple
+      if (set_name %in% c("simple")) {  ## simple needs sv2
         ddssva$sv2 <- svs$sv[,2]
-        design(ddssva) <- ~ sv1 + sv2 + master_id + tx_group
+        design(ddssva) <- ~ sv1 + sv2 + category
       }
-      if (bso %in% c("ethanol")) {  ## ethanol only one that gets sv3
+      if (set_name %in% c("mss")) {  ## unknown whether any need sv3
         ddssva$sv3 <- svs$sv[,3]
-        design(ddssva) <- ~ sv1 + sv2 + sv3 + master_id + tx_group
+        design(ddssva) <- ~ sv1 + sv2 + sv3 + category
       }
     } else {
       ## add chosen svs to DESeq2 data object
-      cat(paste("Adding chosen svs to model..."), "\n\n")
+      cat("adding chosen svs to model...\n\n")
       ddssva$sv1 <- svs$sv[,1]
       ddssva$sv2 <- svs$sv[,2]
       ddssva$sv3 <- svs$sv[,3]
-      design(ddssva) <- ~ sv1 + sv2 + sv3 + master_id + tx_group
-      if (choose_nsv>3) {ddssva$sv4 <- svs$sv[,4]; design(ddssva) <- ~ sv1 + sv2 + sv3 + sv4 + master_id + tx_group}
-      if (choose_nsv>4) {ddssva$sv5 <- svs$sv[,5]; design(ddssva) <- ~ sv1 + sv2 + sv3 + sv4 + sv5 + master_id + tx_group}
+      design(ddssva) <- ~ sv1 + sv2 + sv3 + category
+      if (svs$n.sv>3) {ddssva$sv4 <- svs$sv[,4]; design(ddssva) <- ~ sv1 + sv2 + sv3 + sv4 + category}
+      if (svs$n.sv>4) {ddssva$sv5 <- svs$sv[,5]; design(ddssva) <- ~ sv1 + sv2 + sv3 + sv4 + sv5 + category}
     }
     ## fit model
     ddssva <- DESeq(ddssva, parallel=TRUE, BPPARAM=MulticoreParam(numWorkers))   ## estimate size factors and dispersions, fit negative binomial model, test
-    save(ddssva, file=file)
+    save(ddssva, file=filename)
   }
-  cat(paste("DESeq2 + SVA end",bso),"\n\n")
+  cat("done fitting model with svs\n\n")
   end_time <- Sys.time()
   print(end_time - start_time)
   return(ddssva)
 }
-##############################################
+
 
 ## main script
 dds <- get_dds(set_name,count_dir,r_dir)
-deseq2_explore(dds,set_name,r_dir,plot_dir)
-dds <- deseq2_naive(dds,set_name,r_dir)
-## first pass returns no other data objects, only reports number significant svs
-if (pn==1) {get_svs(dds,set_name)}
-## proceed only for 2nd pass
-if (refine<1) {svs <- get_svs(dds,set_name)} else {svs <- get_svs(dds,set_name,choose_nsv)}  ## get svs
-ddssva <- deseq2_sva(dds,set_name,svs)  ## fit informed model, DESeq2 + SVA
+deseq_explore(dds,set_name,r_dir,plot_dir)
+dds <- deseq_naive(dds,set_name,r_dir)
+if (pn==1) {
+  get_svs(dds,set_name)  ## first pass returns no other data objects, only reports number significant svs
+} else {  ## proceed only for 2nd pass
+  if (refine<1) {svs <- get_svs(dds,set_name)} else {svs <- get_svs(dds,set_name,choose_nsv)}  ## get svs
+  ddssva <- deseq_sva(dds,set_name,svs,r_dir)  ## fit informed model, DESeq2 + SVA
+}

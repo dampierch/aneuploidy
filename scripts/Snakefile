@@ -18,9 +18,9 @@ dt = '_'.join([str(datetime.now()).split(' ')[0], ''.join(str(datetime.now()).sp
 set_num = 13  ## touch gdc_download.py to download next batch
 v_num = 'v3'  ## set_size in gdc_download 100 in v2 from 20 in v1 to get 50 pairs instead of 10; v3 is custom run to fix errors
 rna_set_name = 'simple'
-sva_pass_num <- 1  ## first pass (1) or second pass (2)
-sva_refine <- 0  ## refinement no (0) or yes (1)
-sva_nsv <- 5  ## preferred number of svs to model
+sva_pass_num = 1  ## first pass (1) or second pass (2)
+sva_refine = 0  ## refinement no (0) or yes (1)
+sva_nsv = 5  ## preferred number of svs to model
 
 
 ## rules
@@ -134,14 +134,8 @@ rule unzip_de:
 
 rule run_de:
     input:
-        count_prep = 'count_prep.R',
-        explore_counts = 'count_explr.R',
-        de = 'de_sva.R'
+        # count_prep = 'count_prep.R',
+        # explore_counts = 'count_explr.R',
+        de = 'run_de.sh'
     shell:
-        '''
-        module load gcc/7.1.0 openmpi/3.1.4 R/3.6.0
-        Rscript {input.count_prep} --args {rna_set_name} {sva_pass_num} {sva_refine} {sva_nsv}
-        
-        Rscript {input.explore_counts} --args {rna_set_name}
-        Rscript {input.de} --args {rna_set_name}
-        '''
+        'sbatch {input.de} {rna_set_name} {sva_pass_num} {sva_refine} {sva_nsv}'
