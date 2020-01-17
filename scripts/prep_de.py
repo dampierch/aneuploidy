@@ -23,7 +23,7 @@ def get_uuids(in_file):
             if header:
                 header = False
                 continue
-            uuids.append(in_line.strip('\n').split(',')[-3])
+            uuids.append(in_line.strip('\n').split('\t')[-3])
     return uuids
 
 
@@ -63,7 +63,7 @@ def main(set_name):
     aneuploidy_home = '/scratch/chd5n/aneuploidy/'
     anno_home = aneuploidy_home + 'raw-data/annotations/'
     count_home = aneuploidy_home + 'raw-data/counts/'
-    in_file = anno_home + 'rna_set_' + set_name + '.csv'
+    in_file = anno_home + 'rna_set_' + set_name + '.tsv'
     dest = count_home
     downloaded_file = count_home + 'latest_download.txt'
     ## take actions
