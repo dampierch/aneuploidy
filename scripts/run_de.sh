@@ -4,8 +4,8 @@
 #SBATCH --ntasks=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=20                       #### set to 20 for BiocParallel
-#SBATCH --mem=050000                             #### set to 150 for large BiocParallel
-#SBATCH --time=05:00:00                          #### hh:mm:ss
+#SBATCH --mem=075000                             #### set to 150 for large BiocParallel
+#SBATCH --time=10:00:00                          #### hh:mm:ss
 #SBATCH --partition=standard
 #SBATCH --account=chd5n_alloc                    #### alternative: cphg_caseylab
 #SBATCH --mail-type=END

@@ -12,10 +12,10 @@
 
 ## parse command line
 args <- commandArgs(trailingOnly=TRUE)
-set_name <- args[1]
-pn <- args[2]
-refine <- args[3]
-choose_nsv <- args[4]
+set_name <- args[2]
+pn <- as.numeric(args[3])
+refine <- as.numeric(args[4])
+choose_nsv <- as.numeric(args[5])
 cat(paste("Pass #",pn,"\n"))
 cat(paste("Refine setting:",refine,"\n"))
 if (refine>0) {cat(paste("Num sv chosen:",choose_nsv,"\n"))}
@@ -63,7 +63,7 @@ pca_single <- function(vsd, pcaData, percentVar, aes_name, set_name, plab) {
   base_name <- set_name
   main <- paste("PCA plot for",base_name,"by",aes_name)
   color_values <- group_colors[[aes_name]]
-  ggplot( pcaData, aes(PC1, PC2, color=!!color) ) +
+  pp <- ggplot( pcaData, aes(PC1, PC2, color=!!color) ) +
     geom_point(size=sz) +
     xlab(paste0("PC1: ",percentVar[1],"% variance")) +
     ylab(paste0("PC2: ",percentVar[2],"% variance")) +
@@ -76,6 +76,7 @@ pca_single <- function(vsd, pcaData, percentVar, aes_name, set_name, plab) {
     } else {
       scale_colour_gradient(low=color_values[175], high=color_values[25])
     }
+  return(pp)
 }
 
 
@@ -102,7 +103,7 @@ deseq_explore <- function(dds,set_name,r_dir,plot_dir) {
   for ( i in 1:length(single_factors) ) {
     intgroup[[i]] <- single_factors[i]
   }
-  names(intgroup) <- c("aneuploidy quartile","cancer type","location","phenotype","stage","MSI","vital status","race","sex","hospital","capture kit")
+  names(intgroup) <- c("aneuploidy quartile","cancer type","primary site","phenotype","stage","MSI","vital status","race","sex","capture kit")
   ## calculate pcs
   pcaData <- DESeq2::plotPCA(vsd, intgroup=intgroup[[1]], returnData=TRUE)  ## requires intgroup to set object
   percentVar <- round( 100 * attr(pcaData, "percentVar") )
@@ -119,8 +120,10 @@ deseq_explore <- function(dds,set_name,r_dir,plot_dir) {
   filename <- paste0(set_name,"_des_prlm_plt.pdf")
   pdf(file=filename)  ## set device
   for ( key in intgroup ) {
-    print(pca_single(vsd, pcaData, percentVar, key, set_name, "null_lab"))
-    print(pca_single(vsd, pcaData, percentVar, key, set_name, "name"))
+    pp <- pca_single(vsd, pcaData, percentVar, key, set_name, "null_lab")
+    print(pp)
+    pp <- pca_single(vsd, pcaData, percentVar, key, set_name, "name")
+    print(pp)
   }
   dev.off()  ## close device to save plots
   cat("done exploring counts\n\n")
