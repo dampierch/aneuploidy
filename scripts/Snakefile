@@ -18,7 +18,7 @@ dt = '_'.join([str(datetime.now()).split(' ')[0], ''.join(str(datetime.now()).sp
 set_num = 13  ## touch gdc_download.py to download next batch
 v_num = 'v3'  ## set_size in gdc_download 100 in v2 from 20 in v1 to get 50 pairs instead of 10; v3 is custom run to fix errors
 rna_set_name = 'simple'
-sva_pass_num = 1  ## first pass (1) or second pass (2)
+sva_pass_num = 2  ## first pass (1) or second pass (2)
 sva_refine = 0  ## refinement no (0) or yes (1)
 sva_nsv = 5  ## preferred number of svs to model
 

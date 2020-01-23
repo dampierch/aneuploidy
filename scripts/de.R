@@ -55,6 +55,19 @@ get_dds <- function(set_name,count_dir,r_dir) {
 }
 
 
+pre_filter <- function(dds) {
+  ## pre-filter lowly expressed genes to speed up downstream analysis
+  ## want 5-10 counts in a library to prove gene is expressed in that library
+  ## want minimum expression in at least the number of libraries in the smallest group of interest or 1/5 of samples
+  ## minimum count threshold for a gene across all samples should be 10*N
+  count_lim <- 5
+  sample_lim <- (1/5) * ncol(dds)
+  keep <- rowSums(counts(dds) > count_lim) >= sample_lim
+  dds <- dds[keep,]
+  return(dds)
+}
+
+
 pca_single <- function(vsd, pcaData, percentVar, aes_name, set_name, plab) {
   ## single frame pca plot
   color <- sym(aes_name)
@@ -91,8 +104,7 @@ deseq_explore <- function(dds,set_name,r_dir,plot_dir) {
     lname <- load(filename)
   } else {
     cat(filename,"not found\nrunning vst now...\n\n")
-    keep <- rowSums(counts(dds)) >= 10
-    dds <- dds[keep,]
+    dds <- pre_filter(dds)
     dds <- estimateSizeFactors(dds)
     vsd <- vst(dds, blind=TRUE)  ## *********************rate limiting
     save(vsd, file=filename)
@@ -143,11 +155,17 @@ deseq_naive <- function(dds,set_name,r_dir) {
   } else {
     cat(filename,"not found\nbuilding dds now...\n\n")
     colData(dds)[,"category"] <- as.factor(colData(dds)[,"category"])
-    design(dds) <- ~ category
-    count_lim <- 10
-    sample_lim <- (1/5) * ncol(dds)
-    keep <- rowSums( counts(dds) > count_lim ) >= sample_lim
-    dds <- dds[keep,]
+    design(dds) <- ~category
+    dds <- pre_filter(dds)
+    # counter <- 0
+    # for (i in seq(1,20000,3000)) {
+    #   counter <- counter + 1
+    #   if (counter != 4) {next}
+    #   first <- i
+    #   last <- i + 3000
+    #   cat(paste(first,last,counter),"\n")
+    #   partial_dds <- DESeq(dds[first:last,], parallel=TRUE, BPPARAM=MulticoreParam(numWorkers))
+    # }
     dds <- DESeq(dds, parallel=TRUE, BPPARAM=MulticoreParam(numWorkers))  ## estimate size factors and dispersions, fit negative binomial model, test
     save(dds, file=filename)
   }
@@ -261,6 +279,7 @@ deseq_sva <- function(dds,set_name,svs,r_dir) {
       design(ddssva) <- ~ sv1 + sv2 + sv3 + category
       if (svs$n.sv>3) {ddssva$sv4 <- svs$sv[,4]; design(ddssva) <- ~ sv1 + sv2 + sv3 + sv4 + category}
       if (svs$n.sv>4) {ddssva$sv5 <- svs$sv[,5]; design(ddssva) <- ~ sv1 + sv2 + sv3 + sv4 + sv5 + category}
+      if (svs$n.sv>5) {ddssva$sv6 <- svs$sv[,6]; design(ddssva) <- ~ sv1 + sv2 + sv3 + sv4 + sv5 + sv6 + category}
     }
     ## fit model
     ddssva <- DESeq(ddssva, parallel=TRUE, BPPARAM=MulticoreParam(numWorkers))   ## estimate size factors and dispersions, fit negative binomial model, test

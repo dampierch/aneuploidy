@@ -48,7 +48,7 @@ get_rank_results <- function() {
   anno_dir <- "/scratch/chd5n/aneuploidy/raw-data/annotations/"
   pheno_data <- get_pheno_data(anno_dir)
   tumors_sd_rank <- merge(tumors_ranked, pheno_data, by="subject_id", all.x=TRUE, all.y=FALSE, sort=FALSE)
-  filename <- "/scratch/chd5n/aneuploidy/results/tables/tumors_sd_rank.Rdata"
+  filename <- "/scratch/chd5n/aneuploidy/results/rdata/tumors_sd_rank.Rdata"
   save(tumors_sd_rank,file=filename)
   filename <- "/scratch/chd5n/aneuploidy/results/tables/tumors_sd_rank.tsv"
   write.table(tumors_sd_rank,file=filename,sep="\t",quote=FALSE,row.names=FALSE)
@@ -84,7 +84,7 @@ plot_ranks <- function(tumors_sd_rank) {
   ggsave(filename, plot=pp, device="pdf", path=NULL,
     scale=1, width=9, height=6, units=c("in"), dpi=300, limitsize=TRUE)
   tumors_focus <- plot_df
-  filename <- "/scratch/chd5n/aneuploidy/results/tables/tumors_sd_rank_focus.Rdata"
+  filename <- "/scratch/chd5n/aneuploidy/results/rdata/tumors_sd_rank_focus.Rdata"
   save(tumors_focus,file=filename)
   filename <- "/scratch/chd5n/aneuploidy/results/tables/tumors_sd_rank_focus.tsv"
   write.table(tumors_focus,file=filename,sep="\t",quote=FALSE,row.names=FALSE)
@@ -108,7 +108,7 @@ prep_rna_dge_simple <- function(tumors_focus) {
 
 
 main <- function() {
-  filename <- "/scratch/chd5n/aneuploidy/results/tables/tumors_sd_rank.Rdata"
+  filename <- "/scratch/chd5n/aneuploidy/results/rdata/tumors_sd_rank.Rdata"
   if (file.exists(filename)) {
     lname <- load(filename)
   } else {
