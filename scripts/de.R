@@ -157,15 +157,6 @@ deseq_naive <- function(dds,set_name,r_dir) {
     colData(dds)[,"category"] <- as.factor(colData(dds)[,"category"])
     design(dds) <- ~category
     dds <- pre_filter(dds)
-    # counter <- 0
-    # for (i in seq(1,20000,3000)) {
-    #   counter <- counter + 1
-    #   if (counter != 4) {next}
-    #   first <- i
-    #   last <- i + 3000
-    #   cat(paste(first,last,counter),"\n")
-    #   partial_dds <- DESeq(dds[first:last,], parallel=TRUE, BPPARAM=MulticoreParam(numWorkers))
-    # }
     dds <- DESeq(dds, parallel=TRUE, BPPARAM=MulticoreParam(numWorkers))  ## estimate size factors and dispersions, fit negative binomial model, test
     save(dds, file=filename)
   }
@@ -190,6 +181,7 @@ get_svs <- function(dds,set_name,choose_nsv=NULL) {
   if (file.exists(filename)) {
     cat(paste(filename,"already exists\nloading prior..."), "\n\n")
     lname <- load(file=filename)
+    cat(svs$n.sv,"svs loaded\n")
     cat("done estimating/getting svs\n\n")
     end_time <- Sys.time()
     print(end_time - start_time)
@@ -292,6 +284,31 @@ deseq_sva <- function(dds,set_name,svs,r_dir) {
 }
 
 
+deseq_sva_results <- function(ddssva) {
+  ## test for DE vs fold change threshold, FDR 5%
+  cat(paste("get results start",set_name),"\n\n")
+  fc <- 2  ## set fold change of interest
+  alpha <- 0.05
+  wald_res <- results(ddssva, lfcThreshold=log2(fc), altHypothesis="greaterAbs", alpha=alpha, parallel=TRUE, BPPARAM=MulticoreParam(numWorkers))
+  wald_res$symbol <- mapIds(org.Hs.eg.db, keys=base::substr(row.names(wald_res),start=1,stop=15), column=c("SYMBOL"), keytype=c("ENSEMBL"), multiVals=c("first"))
+  wald_res$entrez <- mapIds(org.Hs.eg.db, keys=base::substr(row.names(wald_res),start=1,stop=15), column=c("ENTREZID"), keytype=c("ENSEMBL"), multiVals=c("first"))
+  wald_res <- wald_res[ , c(7,8,1:6)]
+  wald_res_rank <- wald_res[order(wald_res$padj), ]
+  wald_res_rank$rank <- seq(1,nrow(wald_res_rank))
+  summary(wald_res)
+  cat(paste("Total DEG for",paste0(set_name,":"),sum(wald_res$padj < alpha, na.rm=TRUE),"\n\n"))
+  print(wald_res_rank[1:5,c("symbol","padj")])
+  setwd(r_dir)
+  file <- paste0(set_name,"_dds_sva_res.Rdata")
+  save(wald_res, file=file)
+  setwd(table_dir)
+  file <- paste0(set_name,"_dds_sva_res_rnk.tsv")
+  write.table(wald_res_rank, file=file, sep="\t", quote=FALSE, row.names=TRUE)
+  cat(paste("get results end",set_name),"\n\n")
+  return(list(wald_res,wald_res_rank))
+}
+
+
 ## main script
 dds <- get_dds(set_name,count_dir,r_dir)
 deseq_explore(dds,set_name,r_dir,plot_dir)
@@ -301,4 +318,7 @@ if (pn==1) {
 } else {  ## proceed only for 2nd pass
   if (refine<1) {svs <- get_svs(dds,set_name)} else {svs <- get_svs(dds,set_name,choose_nsv)}  ## get svs
   ddssva <- deseq_sva(dds,set_name,svs,r_dir)  ## fit informed model, DESeq2 + SVA
+  payload <- deseq_sva_results(ddssva)
+  wald_res <- payload[[1]]
+  wald_res_rank <- payload[[2]]
 }
