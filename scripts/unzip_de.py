@@ -37,6 +37,7 @@ def unzip_files(uuids,fnames,count_home):
     for uuid in uuids:
         if os.path.exists('%s/%s' % (count_home + uuid, fnames[new_file_count][:-3])):
             old_file_count = old_file_count + 1
+            new_file_count = new_file_count + 1
             continue
         elif os.path.exists('%s/%s' % (count_home + uuid, fnames[new_file_count])):
             cmd = ' '.join(['gunzip','%s/%s' % (count_home + uuid, fnames[new_file_count])])
@@ -47,7 +48,7 @@ def unzip_files(uuids,fnames,count_home):
             print('%s %s' % ('file name discrepancy for',uuid))
         new_file_count = new_file_count + 1
     print(str(old_file_count) + ' files already decompressed')
-    print(str(new_file_count) + ' files attempted')
+    print(str(new_file_count) + ' files considered')
     print(' '.join(['unzip end',str(datetime.now())]))
 
 
