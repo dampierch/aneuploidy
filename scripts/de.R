@@ -284,7 +284,8 @@ deseq_sva <- function(dds,set_name,svs,r_dir) {
 deseq_sva_results <- function(ddssva) {
   ## test for DE vs fold change threshold, FDR 5%
   cat(paste("get results start",set_name),"\n\n")
-  fc <- 2  ## set fold change of interest
+  if (set_name == "simple") {fc <- 2}  ## set fold change of interest
+  else if (set_name == "mss") {fc <- 1}
   alpha <- 0.05
   wald_res <- results(ddssva, lfcThreshold=log2(fc), altHypothesis="greaterAbs", alpha=alpha, parallel=TRUE, BPPARAM=MulticoreParam(numWorkers))
   wald_res$symbol <- mapIds(org.Hs.eg.db, keys=base::substr(row.names(wald_res),start=1,stop=15), column=c("SYMBOL"), keytype=c("ENSEMBL"), multiVals=c("first"))
