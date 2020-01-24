@@ -119,14 +119,14 @@ library("xCell")
 
 ## functions
 
-set_group_colors <- function(annotation_file_name, groups_of_interest) {
+set_group_colors <- function(filename, groups) {
   ## define group colors
   setwd(anno_dir)
-  pheno <- read.table(file=annotation_file_name, sep="\t", header=TRUE, stringsAsFactors=FALSE, na.strings="--")
+  pheno <- read_tsv(filename)
   colors <- list()
-  for (i in 1:length(groups_of_interest)) {
-    if (class(pheno[, groups_of_interest[i]]) == "character") {
-      gn <- length(levels(as.factor(pheno[, groups_of_interest[i]])))
+  for (i in 1:length(groups)) {
+    if (class(unlist(pheno[, groups[i]])) == "character") {
+      gn <- length(levels(as.factor(unlist(pheno[, groups[i]]))))
       ## get hcl color wheel coordinates for various cohorts (ggplot starts at 15 and increases to 360 by 360/gn)
       inc <- 360/gn
       cords <- vector()
@@ -139,7 +139,7 @@ set_group_colors <- function(annotation_file_name, groups_of_interest) {
       }
       ## get hcl hexidecimal color codes
       hex <- hcl(h=cords, c=100, l=65)
-      names(hex) <- levels(as.factor(pheno[,groups_of_interest[i]]))
+      names(hex) <- levels(as.factor(unlist(pheno[,groups[i]])))
       colors[[i]] <- hex
     } else {
       # continuous_values <- pheno[, groups_of_interest[i]]
@@ -148,7 +148,7 @@ set_group_colors <- function(annotation_file_name, groups_of_interest) {
       # colors[[i]] <- continuous_values
     }
   }
-  names(colors) <- groups_of_interest
+  names(colors) <- groups
   return(colors)
 }
 

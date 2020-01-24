@@ -17,7 +17,7 @@ hetdat = '/scratch/chd5n/aneuploidy/hetsites-data/'
 dt = '_'.join([str(datetime.now()).split(' ')[0], ''.join(str(datetime.now()).split(' ')[1].split('.')[0].split(':')[0:3])])
 set_num = 13  ## touch gdc_download.py to download next batch
 v_num = 'v3'  ## set_size in gdc_download 100 in v2 from 20 in v1 to get 50 pairs instead of 10; v3 is custom run to fix errors
-rna_set_name = 'simple'
+rna_set_name = 'mss'
 sva_pass_num = 2  ## first pass (1) or second pass (2)
 sva_refine = 0  ## refinement no (0) or yes (1)
 sva_nsv = 5  ## preferred number of svs to model
@@ -113,29 +113,27 @@ rule rank_sd:
     input:
         rank = 'rank_sd.R'
     shell:
-        'module load gcc/7.1.0 openmpi/3.1.4 R/3.6.0; Rscript {input.rank}'
+        'module load gcc/7.1.0 R/3.6.1; Rscript {input.rank}'
 
 
-rule prep_de:
+rule download_de:
     input:
-        dld = 'prep_de.py'
+        dld = 'download_de.py'
     output:
         count + 'latest_download.txt'
     shell:
-        'nohup python {input.dld} --set_name {rna_set_name} > ../logs/prep_de_set_{rna_set_name}_{dt}.out 2> ../logs/prep_de_set_{rna_set_name}_{dt}.err'
+        'nohup python {input.dld} --set_name {rna_set_name} > ../logs/download_de_set_{rna_set_name}_{dt}.out 2> ../logs/download_de_set_{rna_set_name}_{dt}.err'
 
 
 rule unzip_de:
     input:
         uz = 'unzip_de.py'
     shell:
-        'python {input.uz} --set_name {rna_set_name}'
+        'python {input.uz} --set_name {rna_set_name} > ../logs/unzip_de_set_{rna_set_name}_{dt}.out 2> ../logs/unzip_de_set_{rna_set_name}_{dt}.err'
 
 
 rule run_de:
     input:
-        # count_prep = 'count_prep.R',
-        # explore_counts = 'count_explr.R',
         de = 'run_de.sh'
     shell:
         'sbatch {input.de} {rna_set_name} {sva_pass_num} {sva_refine} {sva_nsv}'

@@ -92,18 +92,25 @@ plot_ranks <- function(tumors_sd_rank) {
 }
 
 
-prep_rna_dge_simple <- function(tumors_focus) {
-  keep <- tumors_focus$file_id_rna!=""
+prep_rna_dge <- function(tumors_focus,set_name) {
+  if (set_name == "simple") {
+    keep <- tumors_focus$file_id_rna!=""  ## select simply tumors with RNA-seq data, regardless of MSI status
+  } else if (set_name == "mss") {
+    keep <- tumors_focus$file_id_rna!="" & tumors_focus$msi_status=="MSS"  ## select tumors with RNA-seq data and MSI-status=MSS
+  } else if (set_name == "msi_mss_upper" | set_name == "msi_mss_lower") {
+    keep <- tumors_focus$file_id_rna!="" & (tumors_focus$msi_status=="MSS" | tumors_focus$msi_status=="MSI-H") ## select tumors with RNA-seq data and MSI-status=MSS/MSI-H
+  }
   tumors_focus <- tumors_focus[keep,]
+  ## need some code to set up mss vs msi-h excluding outlier msi-h samples
   target_num <- round(nrow(tumors_focus)*(1/4))
   upper <- tumors_focus[1:target_num,]
   lower <- tumors_focus[(nrow(tumors_focus)-target_num+1):nrow(tumors_focus),]
   upper$category <- "upper"
   lower$category <- "lower"
-  simple_set <- rbind(upper,lower)
-  filename <- "/scratch/chd5n/aneuploidy/raw-data/annotations/rna_set_simple.tsv"
-  write.table(simple_set,file=filename,sep="\t",quote=FALSE,row.names=FALSE)
-  return(simple_set)
+  tumor_set <- rbind(upper,lower)
+  filename <- paste0("/scratch/chd5n/aneuploidy/raw-data/annotations/rna_set_",set_name,".tsv")
+  write.table(tumor_set,file=filename,sep="\t",quote=FALSE,row.names=FALSE)
+  return(tumor_set)
 }
 
 
@@ -115,7 +122,8 @@ main <- function() {
     tumors_sd_rank <- get_rank_results()
   }
   tumors_focus <- plot_ranks(tumors_sd_rank)
-  simple_set <- prep_rna_dge_simple(tumors_focus)
+  simple_set <- prep_rna_dge(tumors_focus,"simple")
+  mss_set <- prep_rna_dge(tumors_focus,"mss")
 }
 
 

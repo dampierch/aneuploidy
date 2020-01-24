@@ -32,17 +32,22 @@ def unzip_files(uuids,fnames,count_home):
     check uuid and file name concordance and unzip files
     '''
     print(' '.join(['unzip start',str(datetime.now())]))
-    file_count = 0
-    targets = uuids
-    for uuid in targets:
-        if os.path.exists('%s/%s' % (count_home + uuid, fnames[file_count])):
-            cmd = ' '.join(['gunzip','%s/%s' % (count_home + uuid, fnames[file_count])])
+    new_file_count = 0
+    old_file_count = 0
+    for uuid in uuids:
+        if os.path.exists('%s/%s' % (count_home + uuid, fnames[new_file_count][:-3])):
+            old_file_count = old_file_count + 1
+            continue
+        elif os.path.exists('%s/%s' % (count_home + uuid, fnames[new_file_count])):
+            cmd = ' '.join(['gunzip','%s/%s' % (count_home + uuid, fnames[new_file_count])])
             subprocess.call(cmd, shell=True)
+            # print(cmd)  ## for testing
             print(uuid + ' attempted')
         else:
             print('%s %s' % ('file name discrepancy for',uuid))
-        file_count = file_count + 1
-    print(str(file_count) + ' files attempted')
+        new_file_count = new_file_count + 1
+    print(str(old_file_count) + ' files already decompressed')
+    print(str(new_file_count) + ' files attempted')
     print(' '.join(['unzip end',str(datetime.now())]))
 
 

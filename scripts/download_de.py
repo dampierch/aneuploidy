@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-## prep_de.py :: input samples for rna-seq analysis :: output count matrices
-    ## usage: nohup python prep_de.py --set_name {set_name} > ../logs/prep_de_set_{set_name}_{dt}.out 2> ../logs/prep_de_set_{set_name}_{dt}.err
+## download_de.py :: input samples for rna-seq analysis :: output count matrices
+    ## usage: nohup python download_de.py --set_name {set_name} > ../logs/download_de_set_{set_name}_{dt}.out 2> ../logs/download_de_set_{set_name}_{dt}.err
     ## this script downloads files from gdc with gdc-client using file uuid;
     ## executes download on front end
 
@@ -10,6 +10,7 @@ import subprocess
 from datetime import datetime
 import os
 import argparse
+import glob
 
 
 def get_uuids(in_file):
@@ -32,14 +33,19 @@ def download_files(uuids,gdc_home,dest):
     download files specified in uuids on frontend
     '''
     print(' '.join(['download attempt start',str(datetime.now())]))
-    file_count = 0
-    targets = uuids
-    for uuid in targets:
+    new_file_count = 0
+    old_file_count = 0
+    for uuid in uuids:
+        if len(glob.glob(dest+uuid+'/*.htseq.counts')) == 1:  ## if already have downloaded and decompressed, skip
+            old_file_count = old_file_count + 1
+            continue
         cmd = ' '.join([gdc_home + 'gdc-client download',uuid,'-d',dest])
         subprocess.call(cmd, shell=True)
-        file_count = file_count + 1
+        # print(cmd)  ## for testing
+        new_file_count = new_file_count + 1
         print(uuid + ' attempted')
-    print(str(file_count) + ' files attempted')
+    print(str(old_file_count) + ' files already downloaded and decompressed')
+    print(str(new_file_count) + ' files attempted')
     print(' '.join(['download attempt end',str(datetime.now())]))
 
 

@@ -253,25 +253,22 @@ deseq_sva <- function(dds,set_name,svs,r_dir) {
       ## add num.sv svs to DESeq2 data object
       cat("adding automatic svs to model...\n\n")
       ddssva$sv1 <- svs$sv[,1]
-      design(ddssva) <- ~ sv1 + category  ## simple
-      if (set_name %in% c("simple")) {  ## simple needs sv2
-        ddssva$sv2 <- svs$sv[,2]
-        design(ddssva) <- ~ sv1 + sv2 + category
-      }
-      if (set_name %in% c("mss")) {  ## unknown whether any need sv3
-        ddssva$sv3 <- svs$sv[,3]
-        design(ddssva) <- ~ sv1 + sv2 + sv3 + category
-      }
+      ddssva$sv2 <- svs$sv[,2]
+      design(ddssva) <- ~ sv1 + sv2 + category  ## all datasets get 2 svs
+      if (svs$n.sv>2) {ddssva$sv3 <- svs$sv[,3]; design(ddssva) <- ~ sv1 + sv2 + sv3 + category}
+      if (svs$n.sv>3) {ddssva$sv4 <- svs$sv[,4]; design(ddssva) <- ~ sv1 + sv2 + sv3 + sv4 + category}  ## mss needs 4 svs
+      if (svs$n.sv>4) {ddssva$sv5 <- svs$sv[,5]; design(ddssva) <- ~ sv1 + sv2 + sv3 + sv4 + sv5 + category}
+      if (svs$n.sv>5) {ddssva$sv6 <- svs$sv[,6]; design(ddssva) <- ~ sv1 + sv2 + sv3 + sv4 + sv5 + sv6 + category}  ## simple needs 6 svs
     } else {
       ## add chosen svs to DESeq2 data object
       cat("adding chosen svs to model...\n\n")
       ddssva$sv1 <- svs$sv[,1]
       ddssva$sv2 <- svs$sv[,2]
-      ddssva$sv3 <- svs$sv[,3]
-      design(ddssva) <- ~ sv1 + sv2 + sv3 + category
-      if (svs$n.sv>3) {ddssva$sv4 <- svs$sv[,4]; design(ddssva) <- ~ sv1 + sv2 + sv3 + sv4 + category}
+      design(ddssva) <- ~ sv1 + sv2 + category  ## all datasets get 2 svs
+      if (svs$n.sv>2) {ddssva$sv3 <- svs$sv[,3]; design(ddssva) <- ~ sv1 + sv2 + sv3 + category}
+      if (svs$n.sv>3) {ddssva$sv4 <- svs$sv[,4]; design(ddssva) <- ~ sv1 + sv2 + sv3 + sv4 + category}  ## mss needs 4 svs
       if (svs$n.sv>4) {ddssva$sv5 <- svs$sv[,5]; design(ddssva) <- ~ sv1 + sv2 + sv3 + sv4 + sv5 + category}
-      if (svs$n.sv>5) {ddssva$sv6 <- svs$sv[,6]; design(ddssva) <- ~ sv1 + sv2 + sv3 + sv4 + sv5 + sv6 + category}
+      if (svs$n.sv>5) {ddssva$sv6 <- svs$sv[,6]; design(ddssva) <- ~ sv1 + sv2 + sv3 + sv4 + sv5 + sv6 + category}  ## simple needs 6 svs
     }
     ## fit model
     ddssva <- DESeq(ddssva, parallel=TRUE, BPPARAM=MulticoreParam(numWorkers))   ## estimate size factors and dispersions, fit negative binomial model, test
