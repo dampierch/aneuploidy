@@ -3,9 +3,9 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=20                       #### set to 20 for BiocParallel, requires R/3.5.1
-#SBATCH --mem=075000                             #### set to 150 for large BiocParallel
-#SBATCH --time=00:30:00                          #### hh:mm:ss
+#SBATCH --cpus-per-task=1                        #### set to 20 for BiocParallel, requires R/3.5.1
+#SBATCH --mem=020000                             #### set to 150 for large BiocParallel
+#SBATCH --time=02:00:00                          #### hh:mm:ss
 #SBATCH --partition=standard
 #SBATCH --account=chd5n_alloc                    #### alternative: cphg_caseylab
 #SBATCH --mail-type=END
@@ -22,8 +22,8 @@ sva_nsv=$4
 pwd; hostname; date
 ## environments
 module purge
-module load gcc/7.1.0 R/3.5.1  ## required for BiocParallel
-# module load gcc/7.1.0 R/3.6.1
+# module load gcc/7.1.0 R/3.5.1  ## required for BiocParallel
+module load gcc/7.1.0 R/3.6.1  ## safe with single cpu-per-task
 ## execution
 printf "start ${script_name}\n"
 Rscript ${script_name} --args ${rna_set_name} ${sva_pass_num} ${sva_refine} ${sva_nsv}
