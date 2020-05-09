@@ -3,6 +3,31 @@
 An investigation into the drivers of CIN in CRC using TCGA WXS.
 
 ## Pipeline
+See [Snakefile](scripts/Snakefile)
+
+## First analysis
+* DGE using all samples, most vs least aneuploid
+* DGE using MSS samples, most vs least aneuploid
+
+## Meeting 3/18/2020
+* Pankaj joins team
+* Pearson update: fit normal distribution to diploid peak and LOH peaks, unsure what to do with aneuploid signal
+* Working on: beta distribution (can change shape to be flatter than normal distribution) for aneuploid; 3-state HMM in python
+* Goal: classify heterozygous (i.e. diploid), LOH, and aneuploid states correctly
+* Resolution: chromosome arm
+* Future: Current Protocols in Bioinformatics
+* TODO:
+  1. add normal SD curve to aneuploid rank plot to help with interpretation
+  2. use VAAST to identify genes of interest
+  3. for follow-up analyses, include MSS + MSI-L together
+  4. share AF density plots with Stukenberg, Pearson
+  5. share AF counts at hetsites with Pankaj
+
+## Second analysis
+* add normal SD curve to aneuploid rank plot to help with interpretation - DONE
+* VAAST is proprietary - ABANDON
+* gene expression correlations with MSS and MSI-L - ...
+* share het-sites directory with Pankaj - MAYBE DONE
 
 ### WRP::request file info from GDC
 * uses JSON request to files endpoint via curl
