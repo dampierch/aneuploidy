@@ -26,8 +26,10 @@ See [Snakefile](scripts/Snakefile)
 ## Second analysis
 * add normal SD curve to aneuploid rank plot to help with interpretation - DONE
 * VAAST is proprietary - ABANDON
-* gene expression correlations with MSS and MSI-L - ...
-* share het-sites directory with Pankaj - MAYBE DONE
+* gene expression correlations with MSS and MSI-L - DONE
+* share het-sites directory with Pankaj - DONE
+  1. `/scratch/chd5n/aneuploidy/`
+  2. `/scratch/chd5n/aneuploidy/hetsites-data/r-cnts/`
 
 ### WRP::request file info from GDC
 * uses JSON request to files endpoint via curl

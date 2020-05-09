@@ -11,8 +11,9 @@ library("scales")
 library("cowplot")
 library("reshape2")
 
-ref_dir <- "/scratch/chd5n/Reference_genome/"
+ref_dir <- "/scratch/chd5n/reference-genome/assembly/tcga/"
 crunch_dir <- "/scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/"
+storage_dir <- "/scratch/chd5n/aneuploidy/hetsites-data/r-cnts/"
 plot_dir <- "/scratch/chd5n/aneuploidy/results/plots/"
 
 args <- commandArgs(trailingOnly=TRUE)
@@ -38,7 +39,13 @@ if (any(grepl("file_set", args))) {
 ## load heterozygous site allele fractions for each subject
 file <- list()
 for (sub in subjects) {
-  file[[sub]] <- paste0(crunch_dir,sub,"_cnts2R.tsv")
+  if (file.exists(paste0(crunch_dir,sub,"_cnts2R.tsv"))) {
+    file[[sub]] <- paste0(crunch_dir,sub,"_cnts2R.tsv")
+  } else if (file.exists(paste0(storage_dir,sub,"_cnts2R.tsv"))) {
+    file[[sub]] <- paste0(storage_dir,sub,"_cnts2R.tsv")
+  } else {
+    stop("cannot find the data")
+  }
 }
 het_data <- read.table(file=file[[1]],header=TRUE,sep='\t')
 if (length(file) > 1) {
@@ -71,7 +78,7 @@ good_het_data <- good_het_data[!is.na(good_het_data$allele_fract),]
 x.min <- 0
 x.max <- hg38.offsets[24,'len'] + hg38.offsets[24,'cum_len']
 x.labels <- hg38.offsets$chrom
-scale.x <- scale_x_continuous("chromosome",breaks=hg38.offsets$cum_len,labels=x.labels,limits=c(x.min,x.max),expand=expand_scale(c(0.01,0.01)))
+scale.x <- scale_x_continuous("chromosome",breaks=hg38.offsets$cum_len,labels=x.labels,limits=c(x.min,x.max),expand=expansion(add=c(0.01,0.01)))
 
 leg.pos <- c(0.025,0.92)
 leg.just <- c(0,1)

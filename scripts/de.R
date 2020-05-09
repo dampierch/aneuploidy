@@ -286,6 +286,7 @@ deseq_sva_results <- function(ddssva) {
   cat(paste("get results start",set_name),"\n\n")
   if (set_name == "simple") {fc <- 2}  ## set fold change of interest
   else if (set_name == "mss") {fc <- 1}
+  else if (set_name == "mss_msil") {fc <- 1.5}
   alpha <- 0.05
   wald_res <- results(ddssva, lfcThreshold=log2(fc), altHypothesis="greaterAbs", alpha=alpha, parallel=TRUE, BPPARAM=MulticoreParam(numWorkers))
   wald_res$symbol <- mapIds(org.Hs.eg.db, keys=base::substr(row.names(wald_res),start=1,stop=15), column=c("SYMBOL"), keytype=c("ENSEMBL"), multiVals=c("first"))
@@ -319,4 +320,13 @@ if (pn==1) {
   payload <- deseq_sva_results(ddssva)
   wald_res <- payload[[1]]
   wald_res_rank <- payload[[2]]
+}
+
+
+## reminder for how to interpret de result direction
+interpret_direction <- function(ddssva) {
+  expr <- counts(ddssva,normalized=TRUE)
+  id <- "ENSG00000137975.7"
+  df <- data.frame(counts=expr[rownames(expr)==id,], lab=colData(ddssva)$category)
+  t.test(counts~lab, data=df)
 }

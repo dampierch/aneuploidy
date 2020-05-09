@@ -17,9 +17,9 @@ import argparse
 def shell_cmd(script_home,subject_id,file_set):
     os.chdir(script_home)
     if subject_id:
-        cmd = ' '.join(['module load gcc/7.1.0 openmpi/3.1.4 R/3.6.0; Rscript', 'plot_haplo_chrom.R', '--args', subject_id])
+        cmd = ' '.join(['module load gcc/7.1.0 openmpi/3.1.4 R/3.6.1; Rscript', 'plot_haplo_chrom.R', '--args', subject_id])
     else:
-        cmd = ' '.join(['module load gcc/7.1.0 openmpi/3.1.4 R/3.6.0; Rscript', 'plot_haplo_chrom.R', '--args', file_set])
+        cmd = ' '.join(['module load gcc/7.1.0 openmpi/3.1.4 R/3.6.1; Rscript', 'plot_haplo_chrom.R', '--args', file_set])
     subprocess.call(cmd, shell=True)
 
 
@@ -36,10 +36,11 @@ def main(args):
     home = os.environ['HOME']
     script_home = home + '/projects/aneuploidy/scripts/'
     shell_cmd(script_home,subject_id,file_set)
-    plot_dir = '/scratch/chd5n/aneuploidy/results/plots/'
-    fn_before = plot_dir + 'coad-read_current_hetcnts_plot.pdf'
-    fn_after = plot_dir + '_'.join(['coad-read_set', set_num + 'v3', dt, 'hetcnts_plot.pdf'])
-    copy_current(fn_before,fn_after)
+    if file_set:
+        plot_dir = '/scratch/chd5n/aneuploidy/results/plots/'
+        fn_before = plot_dir + 'coad-read_current_hetcnts_plot.pdf'
+        fn_after = plot_dir + '_'.join(['coad-read_set', set_num + 'v3', dt, 'hetcnts_plot.pdf'])
+        copy_current(fn_before,fn_after)
 
 
 parser = argparse.ArgumentParser(description='shell calls for heterozygous site plots in R')

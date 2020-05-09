@@ -17,10 +17,10 @@ hetdat = '/scratch/chd5n/aneuploidy/hetsites-data/'
 dt = '_'.join([str(datetime.now()).split(' ')[0], ''.join(str(datetime.now()).split(' ')[1].split('.')[0].split(':')[0:3])])
 set_num = 13  ## touch gdc_download.py to download next batch
 v_num = 'v3'  ## set_size in gdc_download 100 in v2 from 20 in v1 to get 50 pairs instead of 10; v3 is custom run to fix errors
-rna_set_name = 'mss'  ## valid options: simple, mss
+rna_set_name = 'mss_msil'  ## valid options: simple, mss, mss_msil
 sva_pass_num = 2  ## first pass (1) or second pass (2)
 sva_refine = 0  ## refinement no (0) or yes (1)
-sva_nsv = 5  ## preferred number of svs to model
+sva_nsv = 2  ## preferred number of svs to model
 
 
 ## rules
@@ -137,3 +137,17 @@ rule run_de:
         de = 'run_de.sh'
     shell:
         'sbatch {input.de} {rna_set_name} {sva_pass_num} {sva_refine} {sva_nsv}'
+
+
+rule run_cor:
+    input:
+        cor = 'gene_fa_cor.R'
+    shell:
+        'module load gcc/7.1.0 R/3.6.1; Rscript {input.cor} --args {rna_set_name}'
+
+
+rule plot_per_sample:
+    input:
+        pps = 'plot_per_sample.py'
+    shell:
+        'python {input.pps}'
