@@ -1,75 +1,27 @@
 # Aneuploidy in CRC
 
-An investigation into the drivers of CIN in CRC using TCGA WXS.
+An investigation into the drivers of chromosomal instability (CIN) in colorectal cancer (CRC) using The Cancer Genome Atlas (TCGA) whole exome sequencing (WXS) data from tumor samples and matched non-tumor samples.
 
 ## Pipeline
-See [Snakefile](scripts/Snakefile)
+* For the live pipeline, see [Snakefile](scripts/Snakefile)
+* For comments on development, see [Pipeline Readme](readme_pipeline.md)
 
-## First analysis
+## Analysis v0.1
 * DGE using all samples, most vs least aneuploid
 * DGE using MSS samples, most vs least aneuploid
 
-## Meeting 3/18/2020
-* Pankaj joins team
-* Pearson update: fit normal distribution to diploid peak and LOH peaks, unsure what to do with aneuploid signal
-* Working on: beta distribution (can change shape to be flatter than normal distribution) for aneuploid; 3-state HMM in python
-* Goal: classify heterozygous (i.e. diploid), LOH, and aneuploid states correctly
-* Resolution: chromosome arm
-* Future: Current Protocols in Bioinformatics
-* TODO:
-  1. add normal SD curve to aneuploid rank plot to help with interpretation
-  2. use VAAST to identify genes of interest
-  3. for follow-up analyses, include MSS + MSI-L together
-  4. share AF density plots with Stukenberg, Pearson
-  5. share AF counts at hetsites with Pankaj
-
-## Second analysis
+## Analysis v0.2
 * add normal SD curve to aneuploid rank plot to help with interpretation - DONE
-* VAAST is proprietary - ABANDON
+* VAAST is proprietary - ABANDON - NEED TO FIND ALTERNATIVE
 * gene expression correlations with MSS and MSI-L - DONE
 * share het-sites directory with Pankaj - DONE
   1. `/scratch/chd5n/aneuploidy/`
   2. `/scratch/chd5n/aneuploidy/hetsites-data/r-cnts/`
 
-### WRP::request file info from GDC
-* uses JSON request to files endpoint via curl
-* identifies files by filter for cases.submitter_id (subject_id)
+## Analysis v0.3
+* classify chromosome arms using 3 state HMM
+* find patterns
 
-#### CHD::request file info from GDC
-* uses JSON request to files, cases, and legacy endpoints via python
-* identifies files by filter for cases.project.project_id, cases.primary_site, experimental_strategy, and data_category
-* generates a manifest for bulk download with gdc-client and a pheno file for parsing
-* legacy endpoint gives msi_status; cases endpoint gives submitter_id and disease_type; files endpoint gives rest
-* [gdc_requests_cases.py](scripts/gdc_requests_cases.py)
-* [gdc_requests_files.py](scripts/gdc_requests_files.py)
-* [gdc_requests_legacy.py](scripts/gdc_requests_legacy.py)
-* [gdc_write_anno.py](scripts/gdc_write_anno.py)
-
-### WRP::parse_tcga_info.py hall_tcga_t10b10.tab > hall_tcga_t10b10.file_info
-* generates file with following fields: sample_id | sample_type | file_name | file_id
-* for normal/tumor pairs (in that order)
-* unclear how it deals with duplicated samples
-
-#### CHD::modify parse_tcga_info.py to take as input pheno.tsv and generate samples.file_info
-* i do so in the following script and of duplicates i take max sequences
-* output is coad-read.file_info
-* [gdc_parse_info.py](scripts/gdc_parse_info.py)
-
-### WRP::nohup ~/ncbi/gdc_download_file_info.sh ~/ncbi/hall_tcga_t61-80.file_info > gdc_down_t61-80.log 2> gdc_down_t61-80.err &
-* bash script feeds file uuid from parse*.py output to gdc-client instead of manifest
-* this allows more precise download but does not appear to permit the ever-ellusive sbatch download
-
-#### CHD::use WRP download strategy (can't use bulk download anyway due to not enough storage space)
-* first try 9/25/2019 on first ten pairs (20 samples) in coad-read.file_info
-* old: `gdc_download.bash`
-* update: [gdc_download.py](scripts/gdc_download.py)
-
-```
-dt=`date +"%Y-%m-%d"`
-nohup bash ~/projects/aneuploidy/scripts/gdc_download.bash > ~/projects/aneuploidy/logs/gdc_download_${dt}.out 2> ~/projects/aneuploidy/logs/gdc_download_${dt}.err &
-```
-
-* seems to have worked
 
 ### WRP::move_gdc_tcga_files.py hall_tcga_t10b10 hall_tcga_t10b10.file_info > hall_tcga_t10b10.file_set 2> hall_tcga_t10b10.file_errors
 * `*.file_set` contains: subject_id, normal_file.bam, tumor_file.bam
