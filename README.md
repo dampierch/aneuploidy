@@ -23,14 +23,6 @@ An investigation into the drivers of chromosomal instability (CIN) in colorectal
 * find patterns
 
 
-### WRP::move_gdc_tcga_files.py hall_tcga_t10b10 hall_tcga_t10b10.file_info > hall_tcga_t10b10.file_set 2> hall_tcga_t10b10.file_errors
-* `*.file_set` contains: subject_id, normal_file.bam, tumor_file.bam
-* need to move bai files as well, because later pysam will need them
-
-#### CHD::check and assemble files for analysis
-* old: `assemble_gdc_files.py`
-* [gdc_assemble_files.py](scripts/gdc_assemble_files.py)
-
 ### WRP:Identify heterozygous sites and count reads there
 * de-duplication is assumed to have been done by GDC
 * requires a `*.file_set` file to identify samples
