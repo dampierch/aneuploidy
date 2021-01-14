@@ -228,7 +228,7 @@ PL=normalized, phred-scaled likelihoods for genotypes 205,0,1033
 
 ## Identify heterozygous sites
 
-Having identified germline SNPs in normal tissue, we next identified heterozygous sites by selecting the subset of SNPs with sufficient sequencing coverage for which the estimated allele fraction was 0.5 in normal tissue.
+Having identified germline SNPs in normal tissue, we next identified heterozygous sites by selecting the subset of SNPs with sufficient sequencing coverage and quality of variant call for which the estimated allele fraction was 0.5 in normal tissue.
 
 ### Original WRP solution
 1. Python master script calls shell script that subsequently calls Python scripts to identify heterozygous sites, count them, and prepare them for analysis
@@ -253,45 +253,61 @@ start_paired_hets.py hall_tcga_t61.file_set
 3. Master script is [run_het_counter.py](scripts/run_het_counter.py), shell script is [het_counter.sh](scripts/het_counter.sh)
 4. Heterozygous site identification is performed by the modified VCF parser script [find_hetsites.py](scripts/find_hetsites.py)
 * *Modified to accommodate genotypes without reference allele (admittedly very few) as well as QD threshold instead of depth and QUAL thresholds*
+* *See [here](https://github.com/dampierch/aneuploidy/blob/de710eb8106b0601de5d8f166d2aba9039c28861/scripts/find_hetsites.py#L76) for QD threshold and [here](https://github.com/dampierch/aneuploidy/blob/de710eb8106b0601de5d8f166d2aba9039c28861/scripts/find_hetsites.py#L81) and [here](https://github.com/dampierch/aneuploidy/blob/de710eb8106b0601de5d8f166d2aba9039c28861/scripts/find_hetsites.py#L35) for alt only alleles*
 
 #### Choice of QD threshold
 1. QD=QualByDepth value
-2. GATK recommends 2, but I chose a slightly more conservative threshold of 5
-3. The optimal threshold for this purpose is unknown; I compiled some notes on the subject and tried some tests in [coverage_analysis.py](scripts/coverage_analysis.py)
+2. GATK recommends 2 (i.e. exclude variants with QD<2)
+3. I use a slightly more conservative threshold of 5 (i.e. exclude variants with QD<5)
+4. Optimal threshold for this purpose is unknown; some notes on the subject and some preliminary tests are in [coverage_analysis.py](scripts/coverage_analysis.py)
 
 ## Quantify variant allele fractions
 
-To quantify allele fractions at heterozygous sites in each subject, numbers of reads of each allele at all heterozygous SNPs with adequate coverage were counted in both tumor and normal samples. SNPs are necessarily bi-allelic in this context because they are polymorphic with respect to the reference genome in normal, diploid cells from individual subjects. Heterozygous sites will typically harbor one reference and one alternate allele (for sites that are bi-allelic in the population) but may rarely harbor two different alternate alleles (for sites that are poly-allelic in the population).
+Having identified germline heterozygous sites for each subject, we next quantified allele fractions at those sites in normal and tumor tissue. To quantify allele fractions, numbers of unfiltered reads of each allele at all heterozygous sites with adequate coverage were counted. Sites of interest are necessarily bi-allelic in this context because they are polymorphic with respect to the reference genome in normal, diploid cells from individual subjects. Sites of interest thus typically harbor one reference and one alternate allele (for sites that are bi-allelic in the population) but may rarely harbor two different alternate alleles (for sites that are poly-allelic in the population).
 
-### WRP solution ...
+### Original WRP solution
+1. As noted above, Python master script calls shell script that subsequently calls Python scripts to identify heterozygous sites, count them, and prepare them for analysis
+2. Master script is `start_paired_hets.py`, shell script is `find_count_hets_tumor_pair_gdc.sh`
+3. Unfiltered reads at heterozygous sites are counted with `pysam` in `count_het_freqs2.py`
+4. Read counts are prepared for analysis with `het_cnts2R.py`
+5. Command:
 
 ```
 start_paired_hets.py hall_tcga_t61.file_set
 ```
 
-* calls find_count_hets_tumor_pair_gdc.sh, which in turn calls find_hetsites.py, count_het_freqs2.py, het_cnts2R.py
+#### `count_het_freqs2.py` does three things
+1. Reads an unfiltered bam file (tumor or normal)
+2. Reads bed file `*_het.bed` with position of germline (i.e. normal) heterozygous sites
+3. Counts reads overlapping each allele at each site of interest (from bed) and reports allele counts for sites with sufficient coverage and without too high a percentage of unexpected alleles; writes vcf-like output to `*.het_cnts2`
+* *Optimal coverage and expected allele thresholds are unknown.*
+* *Allele counts for normal should be equal to AD value in `.snp.indel.vcf_L` but this is untested.*
 
-* count_het_freqs2.py does three things:
-  1. reads an unfiltered bam file (tumor or normal)
-  2. reads bed file `*_het.bed` with position of baseline (i.e. normal) heterozygous sites
-  3. writes vcf-like output with allele counts in bam file (tumor or normal) at each location in bed file
-  4. output: `*.het_cnts2`
-  5. the allele counts for the normal bam may be redundant w/r/t the `*.snp.indel.vcf_L` allele counts...we will see
-* het_cnts2R.py does two things:
-  1. reads allele counts at heterozygous locations in tumor and normal `*.het_cnts2`
-  2. prepares allele count information for easy input into R
-  3. output: `out_fields = ['sample', 'chrom', 'pos', 't_type', 'ref', 'ref_cnt', 'alt', 'alt_cnt', 'fract']`
-* het_cnts2R_n.py does a better job of checking to ensure that the same chromosome positions are being merged
+#### `het_cnts2R.py` does two things
+1. Reads allele counts at heterozygous sites from `*.het_cnts2`
+2. Prepares allele count information for easy input into R by filtering for sites with paired information (i.e. both normal and tumor counts exist at the site in question) and by calculating major allele fractions
+* *Note `het_cnts2R_n.py` does a better job of checking to ensure that the same chromosome positions are being merged*
 
+### CHD solution
+1. As noted above, mimic WRP solution with Python master script to call shell script that subsequently calls Python scripts to identify heterozygous sites, count them, and prepare them for analysis
+2. Master script is [run_het_counter.py](scripts/run_het_counter.py), shell script is [het_counter.sh](scripts/het_counter.sh)
+3. Unfiltered reads at heterozygous sites are counted with `pysam` in [count_hetalleles.py](scripts/count_hetalleles.py)
+* *Modified to use more intuitive loop over pileupcolumns and to include a semi-arbitrary, reasonable, mildly conservative coverage threshold*
+4. Read counts are prepared for analysis (i.e. converted to allele fractions) with [hetcnts_2R.py](scripts/hetcnts_2R.py)
+* *Modified slightly with `get_hetcnts_list` function*
+* *Implementation Note: remember to make scripts executable with `#!/usr/bin/env python3` at top and `chmod +x` at Unix command line*
 
+#### Choice of coverage threshold
+1. `dp_thresh` (a.k.a. `cov_thresh`) originally set to 100 in `count_het_freqs2.py` and `het_cnts2R.py`
+2. With change to using `qd_thresh` of 5 in [find_hetsites.py](scripts/find_hetsites.py), we can try lowering `cov_thresh` in [count_hetalleles.py](scripts/count_hetalleles.py) to 20
+3. Optimal threshold for this purpose is unknown but should depend on empiric coverage; some notes on the subject and some preliminary tests are in [coverage_analysis.py](scripts/coverage_analysis.py) as well as [run_coverage_checker.py](scripts/run_coverage_checker.py), [coverage_checker.sh](scripts/coverage_checker.sh), and [coverage_checker.py](scripts/coverage_checker.py)
+* *The actual coverage counting is performed by [coverage_checker.py](scripts/coverage_checker.py)*
+* *Implementation Note: these scripts work but take too long; the depth counter should be parallelized*
+* *Parallelization of `pysam` is subject of this [Biostars post](https://www.biostars.org/p/275974/#276179)*
+* *GATK DepthOfCoverage function or old DiagnoseTargets function is probably what I should use; more in [coverage_analysis.py](scripts/coverage_analysis.py)*
 
-#### CHD::allele counts
-* start_paired_hets.py `*.file_set` :: see [run_het_counter.py](scripts/run_het_counter.py)
-* find_count_hets_tumor_pair_gdc.sh :: see [het_counter.sh](scripts/het_counter.sh)
-* count_het_freqs2.py :: see [count_hetalleles.py](scripts/count_hetalleles.py); includes modification for more intuitive loop over pileupcolumns as well as cov_thresh
-* het_cnts2R.py :: see [hetcnts_2R.py](scripts/hetcnts_2R.py); includes minor modification with get_hetcnts_list function
-* must remember to make scripts executable with `#!/usr/bin/env python3` at top and `chmod +x` at unix command line
-* with dp_thresh in count_hetalleles set to x, first_10_pairs had:
+#### Coverage threshold tests
+1. Simple commands for preliminary test:
 
 ```
 wc -l *_normal_errcnts.bed
@@ -302,6 +318,8 @@ wc -l *_tumor_hetcnts.bed
 grep 'tumor missing' *_R_missing.err | wc -l
 ```
 
+2. With `qual_thresh = 100` and `dp_thresh = 100` in [find_hetsites.py](scripts/find_hetsites.py) and variable `dp_thresh` in [count_hetalleles.py](scripts/count_hetalleles.py), we find the following counts in first_10_pairs set:
+
 | dp_thresh | tissue type | errcnts | hetcnts | R missing |
 | :--: | :--: | :--: | :--: | :--: |
 | 100 | normal | 13760 | 69617 | 4282 |
@@ -311,15 +329,46 @@ grep 'tumor missing' *_R_missing.err | wc -l
 | 50 | normal | 43 | 83334 | 17 |
 | 50 | tumor | 14101 | 69276 | 14041 |
 
-* with qd_thresh in find_hetsites set to 5 and cov_thresh in count_hetalleles set to 20, first_10_pairs had:
+* Counted heterozygous sites not very sensitive to `dp_thresh` in [count_hetalleles.py](scripts/count_hetalleles.py)
+
+3. With `qd_thresh = 5` in [find_hetsites.py](scripts/find_hetsites.py) and `cov_thresh = 20` in [count_hetalleles.py](scripts/count_hetalleles.py), we find the following counts in first_10_pairs set:
 
 | tissue type | errcnts | hetcnts | R missing |
 | :--: | :--: | :--: | :--: |
 | normal | 15764 | 155493 | 3503 |
 | tumor | 28820 | 142437 | 29298 |
 
-##### CHD:optimal dp_thresh (i.e. cov_thresh)
-* will be related to coverage; see [run_coverage_checker.py](scripts/run_coverage_checker.py), [coverage_checker.sh](scripts/coverage_checker.sh), and [coverage_checker.py](scripts/coverage_checker.py)
-* these scripts work but take too long...need to parallelize the depth counter...
-* code from this [BioStars post](https://www.biostars.org/p/275974/#276179) should be helpful...
-* more importantly, GATK has DiagnoseTargets; see [coverage_analysis.py](scripts/coverage_analysis.py)
+* Counted heterozygous sites were more restricted by original `qual_thresh` and `dp_thresh` in [find_hetsites.py](scripts/find_hetsites.py)
+* `qd_thresh = 5` in [find_hetsites.py](scripts/find_hetsites.py) and `cov_thresh = 20` in [count_hetalleles.py](scripts/count_hetalleles.py) is relatively permissive
+
+#### Heterozygous site counts
+1. Show distribution of counted heterozygous sites across samples and check correlation with known technical factors (e.g. exome capture kit, source)
+2. Code:
+
+```
+summarize_hetsites ()
+{
+  for i in TCGA-*.gz; do echo ${i%_*}; done > zzcol1.txt
+  for i in TCGA-*.gz; do zcat $i | wc -l | awk '{print $1-1}'; done > zzcol2.txt
+  paste zzcol1.txt zzcol2.txt > ../hetsite_sum.tsv
+  rm zzcol1.txt zzcol2.txt
+}
+
+cd /scratch/chd5n/aneuploidy/hetsites-data
+summarize_hetsites
+```
+
+import pandas as pd
+df = pd.read_csv('hetsite_sum.tsv', sep='\t', header=None, names=['subject_id', 'hetsites'])
+df.hetsites.describe()
+
+count      587
+
+mean     24387
+std       6939
+
+min       2528
+25%      20716
+50%      25423
+75%      27913
+max      40600

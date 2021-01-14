@@ -56,11 +56,15 @@ plt.show()
 ## broad on filtering
 ## https://software.broadinstitute.org/gatk/documentation/article.php?id=4721
 ## https://software.broadinstitute.org/gatk/documentation/article.php?id=6925
-## broad recommends starting with QD<2 if using hard filter
+## https://gatk.broadinstitute.org/hc/en-us/articles/360035890471
+## https://gatk.broadinstitute.org/hc/en-us/articles/360035531112
+## broad recommends starting with QD<2 if using hard filter (i.e. exclude QD<2)
 ##
 ## broad on coverage thresholds
 ## https://software.broadinstitute.org/gatk/documentation/tooldocs/3.8-0/org_broadinstitute_gatk_tools_walkers_diagnostics_diagnosetargets_DiagnoseTargets.php
 ## DiagnoseTargets calls low_coverage at 5x
+## https://gatk.broadinstitute.org/hc/en-us/articles/360041851491
+## DepthOfCoverage (BETA) may have replaced DiagnoseTargets, which appears to have been deprecated
 ## https://software.broadinstitute.org/gatk/documentation/tooldocs/3.8-0/org_broadinstitute_gatk_tools_walkers_haplotypecaller_HaplotypeCaller.php
 ## HaplotypeCaller --minReadsPerAlignmentStart default is 10 but this is only used in downsampling
 ##
