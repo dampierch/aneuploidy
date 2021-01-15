@@ -285,7 +285,7 @@ start_paired_hets.py hall_tcga_t61.file_set
 
 #### `het_cnts2R.py` does two things
 1. Reads allele counts at heterozygous sites from `*.het_cnts2`
-2. Prepares allele count information for easy input into R by filtering for sites with paired information (i.e. both normal and tumor counts exist at the site in question) and by calculating major allele fractions
+2. Prepares allele count information for easy input into R by filtering for ?something? ?sites with paired information (i.e. both normal and tumor counts exist at the site in question)? and by calculating major allele fractions
 * *Note `het_cnts2R_n.py` does a better job of checking to ensure that the same chromosome positions are being merged*
 
 ### CHD solution
@@ -372,3 +372,7 @@ min       2528
 50%      25423
 75%      27913
 max      40600
+
+
+## HMM classifier
+* *Under construction* [fit_hmm.py](scripts/fit_hmm.py)

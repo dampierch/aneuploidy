@@ -68,6 +68,12 @@ An investigation into the drivers of chromosomal instability (CIN) in colorectal
 
 Total: 587 pairs (1174 WXS files) processed
 
+## Background
+1. Pfister et al., 2018: [Identification of Drivers of Aneuploidy in Breast Tumors](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5997284/)
+2. Taylor et al., 2018: [Genomic and Functional Approaches to Understanding Cancer Aneuploidy](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6028190/)
+3. Sansregret & Swanton (review), 2017: [The Role of Aneuploidy in Cancer Evolution](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5204330/)
+4. Andor et al., 2016: [Pan-cancer analysis of the extent and consequences of intra-tumor heterogeneity](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4830693/)
+
 ## early thoughts
 
 ### Sample selection
