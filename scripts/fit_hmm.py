@@ -12,8 +12,9 @@
 ##   -- censor bad sites and estimate LOH mean
 ##   -- for each chrom, extract and transform allele fractions, store in array
 ##   -- for each array, fit an HMM and set probabilities
-##   -- store state probabilities for all sites in R data object
-
+##   -- store state probabilities for all sites in tsv file
+## usage example:
+##   fit_alleles3ac.py TCGA-*_cnts2R.tsv.gz > TCGA-*_hmmfit.tsv
 ## input: TCGA-*_cnts2R.tsv
 ## subject_id    chrom    pos    t_type    maj    maj_cnt    min    min_cnt    maj_fract
 ## TCGA-3L-AA1B  chr1     69511  norm      A      358        G      312        0.53433
@@ -22,10 +23,68 @@
 ## TCGA-3L-AA1B  chr1     826965 tumor     A      111        G      131        0.45868
 
 
-import fileinput
+import os
 import sys
+import gzip
+import argparse
 import numpy as np  ## must use pip3 install --user numpy==1.16.1
 from pomegranate import State, NormalDistribution, HiddenMarkovModel
+
+
+mod_name = 'fit_hmm'
+
+
+def read_counts(target):
+    '''
+    -- reads in heterozygous site count data and filters sites to exclude those
+    that do not exist in both normal and tumor samples
+    -- also extracts major allele fraction of normal sample after site filter to
+    use for cleaning data
+    '''
+    data_miss = []
+    data_norm = []
+    data_tumor = []
+    fields = False
+    with gzip.open(target, 'rt') as infile:
+        for inline in infile:
+            ## capture header
+            if not fields:
+                infields = inline.strip('\n').split('\t')
+                fields = True
+                continue
+            ## collect data
+            data = dict(zip(infields, inline.strip('\n').split('\t')))
+            if data['maj_fract'] == 'NA':
+                data_miss.append(data)
+                continue
+            if data['t_type'] == 'norm':
+                data_norm.append(data)
+            else:
+                data_tumor.append(data)
+    d_norm = {'::'.join([i['chrom'], i['pos']]): i for i in data_norm}
+    d_tumor = {'::'.join([i['chrom'], i['pos']]): i for i in data_tumor}
+    l_norm = [d_norm[k] for k in d_norm if k in d_tumor]
+    l_tumor = [d_tumor[k] for k in d_tumor if k in d_norm]
+    l_norm_miss = [d_norm[k] for k in d_norm if k not in d_tumor]
+    l_norm_tum = [d_tumor[k] for k in d_tumor if k not in d_norm]
+    data_miss = data_miss + l_norm_miss + l_norm_tum
+    ## for censoring
+    fract_norm = [float(i['maj_fract']) for i in l_norm]
+    return data_miss, l_norm, l_tumor, fract_norm
+
+
+def set_range(data, range=1.6, median=0.5):
+    '''
+    parameters:
+    -- range: inspired by R boxplot(), range parameter determines how far out
+    from observed interquartile range values will be accepted
+    -- median: expected median of data
+    '''
+    min, q1, med, q3, max = fivenum(data)
+    r = abs(q3 - q1) * range
+    r_min = median - r
+    r_max = median + r
+    return r_min, r_max
 
 
 def init_model(start_dip, stay_state, mean_eu, sd_eu, mean_loh):
@@ -73,37 +132,30 @@ def init_model(start_dip, stay_state, mean_eu, sd_eu, mean_loh):
 
 
 def fit_hmm(allele_freqs, start_dip, stay_state, mean_eu, sd_eu, mean_loh):
-
     model = init_model(start_dip, stay_state, mean_eu, sd_eu, mean_loh)
-
     model.fit([allele_freqs], algorithm='baum-welch')
-    [norm_stateProbs, norm_transFreqs] = model.forward_backward(allele_freqs)
 
+    ## check
+    [norm_stateProbs, norm_transFreqs] = model.forward_backward(allele_freqs)
 #   print "norm_stateProbs:\n",norm_stateProbs
 #   print "norm_transFreqs:\n",norm_transFreqs[0:100]
 
     post_states = model.predict(allele_freqs, algorithm='map')
     post_probs = model.predict_proba(allele_freqs)
-
     return post_states, post_probs, model
 
 
 def map_states(model):
-
     post_states = []
     state_pos = {}
-
     for ix, state in enumerate(model.states):
         post_states.append(state.name)
         state_pos[state.name] = ix
-
     return state_pos, post_states
 
 
 def fivenum(data):
-    '''
-    five number summary
-    '''
+    ## five number summary
     return np.percentile(data, [0, 25, 50, 75, 100], interpolation='midpoint')
 
 
@@ -113,43 +165,11 @@ def main():
     print("# " + ' '.join(sys.argv))
 
     sqrt_sqrt2 = np.sqrt(np.sqrt(2))
-
     curr_chrom = ''
 
-
-THIS SHOULD BE A SEPARATE FUNCTION TO LOAD DATA
-    norm_data_raw = []
-    norm_freq_raw = []
-    tumor_data_raw = []
-
-    have_fields = False
-    for line in fileinput.input():
-
-        ## copy previous comments
-        if line[0] == '#':
-            print(line, end='')
-
-        if not have_fields:
-            field_names = line.strip('\n').split('\t')
-            have_fields = True
-
-            continue
-
-        r_data = dict(zip(field_names, line.strip('\n').split('\t')))
-
-        if r_data['fract'] == 'NA':
-            sys.stderr.write("*** %s missing data: %s" % (fileinput.filename(),line))
-            continue
-
-        if r_data['t_type'] == 'norm':
-            norm_data_raw.append(r_data)
-            ## used for censoring
-            norm_freq_raw.append(float(r_data['fract']))
-        else:
-            tumor_data_raw.append(r_data)
-
-
-## done reading data
+    target = ''.join([args.count_path, args.subject_id, '_cnts2R.tsv.gz'])
+    data_miss, data_norm, data_tumor, fract_norm = read_counts(target)
+    r_min, r_max = set_range(fract_norm)
 
 ## double check that chrom_data['norm'] and chrom_data['tumor'] are in phase
 
@@ -157,20 +177,12 @@ THIS SHOULD BE A SEPARATE FUNCTION TO LOAD DATA
 ## chrom_data_norm, chrom_data_tumor, allele_freqs_norm, allele_freqs_tumor
 ## for good sites
 
-# need python implementation of this
-# fv5 <- fivenum(wide_thet_data$fract_norm)
-# iqr_x = abs(fv5[4]-fv5[2])*1.6
-# c_iqr_min = fv5[3] - iqr_x
-# c_iqr_max = fv5[3] + iqr_x
-# wide_het_data$is.good = wide_het_data$fract_norm >= c_iqr_min & wide_het_data$fract_norm<= c_iqr_max
 
-THIS SHOULD BE A SEPARATE FUNCTION TO CENSOR DATA
-    n_min, n_q1, n_med, n_q3, n_max = fivenum(norm_freq_raw)
-
-    iqr_x = abs(n_q3 - n_q1) * 1.6
-    iqr_min = 0.5 - iqr_x
-    iqr_max = 0.5 + iqr_x
-
+def clean_data(data_norm, data_tumor, r_min, r_max):
+    '''
+    -- make sure all site pairs are in same order in normal and tumor
+    -- remote outlier sites based on range criteria
+    '''
     ## all the row data
     chrom_data_norm = []
     chrom_data_tumor = []
@@ -186,8 +198,8 @@ THIS SHOULD BE A SEPARATE FUNCTION TO CENSOR DATA
     normal_cnts = 0
     tumor_cnts = 0
 
-    for ix, n_data in enumerate(norm_data_raw):
-        t_data = tumor_data_raw[ix]
+    for idx, data_n in enumerate(data_norm):
+        data_t = data_tumor[idx]
         if (int(n_data['pos']) != int(t_data['pos'])):
             sys.stderr.write("*** Phase error -- norm: %s %s :: tumor %s %s\n"%(n_data['chrom'],n_data['pos'],t_data['chrom'],t_data['pos']))
             exit(1)
@@ -214,3 +226,26 @@ THIS SHOULD BE A SEPARATE FUNCTION TO CENSOR DATA
 
     ## calculate std.dev of cen_allele_fracts
     tumor_fa_score = np.std(cen_allele_fracts_tumor)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Fit 3 state HMM classifier')
+    parser.add_argument(
+        '--subject_id', help='subject_id to be analyzed',
+        action='store', dest='subject_id',
+        default=False
+    )
+    parser.add_argument(
+        '--count_path', help='path to intercalated counts',
+        action='store', dest='count_path',
+        default='/scratch/chd5n/aneuploidy/hetsites-data/'
+    )
+    parser.add_argument(
+        '--out_path', help='path to output directory',
+        action='store', dest='out_path',
+        default='/scratch/chd5n/aneuploidy/hmm-fit/'
+    )
+    args = parser.parse_args()
+    main(args)
+else:
+    print('functions loaded for', mod_name)

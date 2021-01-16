@@ -343,36 +343,13 @@ grep 'tumor missing' *_R_missing.err | wc -l
 
 #### Heterozygous site counts
 1. Show distribution of counted heterozygous sites across samples and check correlation with known technical factors (e.g. exome capture kit, source)
-2. Code:
-
-```
-summarize_hetsites ()
-{
-  for i in TCGA-*.gz; do echo ${i%_*}; done > zzcol1.txt
-  for i in TCGA-*.gz; do zcat $i | wc -l | awk '{print $1-1}'; done > zzcol2.txt
-  paste zzcol1.txt zzcol2.txt > ../hetsite_sum.tsv
-  rm zzcol1.txt zzcol2.txt
-}
-
-cd /scratch/chd5n/aneuploidy/hetsites-data
-summarize_hetsites
-```
-
-import pandas as pd
-df = pd.read_csv('hetsite_sum.tsv', sep='\t', header=None, names=['subject_id', 'hetsites'])
-df.hetsites.describe()
-
-count      587
-
-mean     24387
-std       6939
-
-min       2528
-25%      20716
-50%      25423
-75%      27913
-max      40600
-
+2. Also check missing chromosomes problem
+3. Use [summarize_sites.py](scripts/summarize_sites.py)
 
 ## HMM classifier
 * *Under construction* [fit_hmm.py](scripts/fit_hmm.py)
+
+## TO DO
+* Fix [hetcnts_2R.py](scripts/hetcnts_2R.py) to make 'phasing' more sensible
+* Fix [plot_haplo_chrom.R](scripts/plot_haplo_chrom.R) to simplify syntax
+* Finish [fit_hmm.py](scripts/fit_hmm.py)
