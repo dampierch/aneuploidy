@@ -14,7 +14,12 @@ seq = '/scratch/chd5n/aneuploidy/raw-data/sequencing/'
 count = '/scratch/chd5n/aneuploidy/raw-data/counts/'
 plot = '/scratch/chd5n/aneuploidy/results/plots/'
 hetdat = '/scratch/chd5n/aneuploidy/hetsites-data/'
-dt = '_'.join([str(datetime.now()).split(' ')[0], ''.join(str(datetime.now()).split(' ')[1].split('.')[0].split(':')[0:3])])
+dt = '_'.join(
+    [
+        str(datetime.now()).split(' ')[0],
+        ''.join(str(datetime.now()).split(' ')[1].split('.')[0].split(':')[0:3])
+    ]
+)
 set_num = 13  ## touch gdc_download.py to download next batch
 v_num = 'v3'  ## set_size in gdc_download 100 in v2 from 20 in v1 to get 50 pairs instead of 10; v3 is custom run to fix errors
 rna_set_name = 'mss_msil'  ## valid options: simple, mss, mss_msil
@@ -77,6 +82,7 @@ rule call_variants:
 
 
 rule count_hetsites:
+    ## note: hetcnts_2R.py is deprecated
     input:
         hetcount = 'run_het_counter.py',
         file_set = anno + 'coad-read_current.file_set',
@@ -85,6 +91,18 @@ rule count_hetsites:
         seq + 'latest_het_counts.txt'
     shell:
         'python {input.hetcount} --in_file {input.file_set}'
+
+
+rule parse_hetcnts:
+    ## aprox 3 min on frontend for 587 subjects
+    ## this script fixes a bug in hetcnts_2R.py
+    input:
+        py = 'parse_hetcnts.py',
+        info = '/scratch/chd5n/aneuploidy/coad-read.file_info'
+    output:
+        end = '/scratch/chd5n/aneuploidy/hetcnts/TCGA-WS-AB45_hetcnts.tsv'
+    shell:
+        'python {input.py} --info {input.info} > parse_hetcnts_{dt}.log'
 
 
 rule make_density_plots:
