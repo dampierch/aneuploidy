@@ -344,7 +344,12 @@ grep 'tumor missing' *_R_missing.err | wc -l
 #### Heterozygous site counts
 1. Show distribution of counted heterozygous sites across samples and check correlation with known technical factors (e.g. exome capture kit, source)
 2. Also check missing chromosomes problem
-3. Use [summarize_sites.py](scripts/summarize_sites.py)
+3. Use [sum_sites.py](scripts/sum_sites.py) and [sum_sites.R](scripts/sum_sites.R)
+4. We see that all samples with fewer than 5000 sites tested are from Gapfiller_7m exome capture kit
+5. The maximum sites for a tumor sample with the Gapfiller_7m kit is 2665; the analgous value for normal samples is 2563
+6. We see a cluster of samples in the tumor TSV (i.e. Rdata) filtered set of sites with site counts between 5000 and 8000 and about 10 chromosomes included
+7. We cannot fix the Gapfiller_7m outliers; we should exclude them
+8. We can fix the missing chromosome problem, and we expect this cluster to disappear after fixing the problem with the sorting, intercalating, and filtering script (i.e. hetcnts_2R)
 
 ## HMM classifier
 * *Under construction* [fit_hmm.py](scripts/fit_hmm.py)

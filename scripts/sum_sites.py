@@ -1,8 +1,9 @@
 import gzip
 from glob import glob
+from pandas import read_csv, merge
 
 
-modname = 'summarize_sites'
+modname = 'sum_sites'
 
 
 def extract_value(l, count_type):
@@ -78,12 +79,40 @@ def write_summary(target, d):
     print('file written to', target)
 
 
+def update_ann(target_path):
+    '''
+    takes previously compiled phenotype annotations and adds site and chrom
+    summaries created by this script
+    '''
+    targets = ['pheno', 'summary_sites', 'summary_chroms']
+    d = {}
+    for i in targets:
+        target = ''.join([target_path, i, '.tsv'])
+        d[i] = read_csv(target, sep='\t')
+    d['file_info'] = read_csv(
+        ''.join([target_path, 'coad-read.file_info']), sep='\t', header=None,
+        names=['drop1', 't_type', 'drop2', 'file_id']
+    )
+    df1 = merge(d['file_info'], d['pheno'], how='left', on='file_id')
+    df2 = merge(
+        d['summary_sites'], d['summary_chroms'], how='inner',
+        on='subject_id', suffixes=('_sites', '_chroms')
+    )
+    df = merge(df1, df2, how='left', on='subject_id')
+    df = df.drop(labels=['drop1', 'drop2'], axis=1)
+    target = ''.join([target_path, 'ann.tsv'])
+    df.to_csv(target, sep='\t', index=False)
+    print('file written to', target)
+    return df
+
+
 def main():
     target_path = '/scratch/chd5n/aneuploidy/'
     for count_type in ['sites', 'chroms']:
         d = count_data(count_type)
         target = ''.join([target_path, 'summary_', count_type, '.tsv'])
         write_summary(target, d)
+    df = update_ann(target_path)
 
 
 if __name__ == '__main__':
