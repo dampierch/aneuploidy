@@ -164,7 +164,8 @@ plot_fractions <- function(data, ttype_colors, chrom_pos) {
             "Chromosome", breaks=chrom_pos$abs_pos0, labels=x_ticks,
             limits=c(x_min, x_max), expand=expansion(add=c(0.01, 0.01))
         ) +
-        ylab("Allele Fraction")
+        ylab("Allele Fraction") +
+        scale_y_continuous(limits=c(0.5, 1.0))
     return(ggp)
 }
 
