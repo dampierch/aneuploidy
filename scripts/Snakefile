@@ -95,7 +95,8 @@ rule count_hetsites:
 
 rule parse_hetcnts:
     ## aprox 3 min on frontend for 587 subjects
-    ## this script fixes a bug in hetcnts_2R.py
+    ## this rule fixes a bug in hetcnts_2R.py
+    ## note: output compressed and moved to hetsites-data manually
     input:
         py = 'parse_hetcnts.py',
         info = '/scratch/chd5n/aneuploidy/coad-read.file_info'
@@ -103,6 +104,23 @@ rule parse_hetcnts:
         end = '/scratch/chd5n/aneuploidy/hetcnts/TCGA-WS-AB45_hetcnts.tsv'
     shell:
         'python {input.py} --info {input.info} > parse_hetcnts_{dt}.log'
+
+
+rule summarize_hetsites:
+    ## this rule extracts total sites and unique chromosomes tested
+    ## a quality control step to identify problems with pipeline
+    ## 3-4 min on front end
+    input:
+        py = 'sum_sites.py',
+        R = 'sum_sites.R'
+    output:
+        '/scratch/chd5n/aneuploidy/plots/summary_sites.pdf'
+    shell:
+        '''
+        module load anaconda/5.2.0-py3.6 gcc/7.1.0 openmpi/3.1.4 R/4.0.0
+        python {input.py}
+        Rscript {input.R}
+        '''
 
 
 rule make_density_plots:

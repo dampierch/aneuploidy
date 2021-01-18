@@ -25,7 +25,7 @@ def count_data(count_type):
     -- function reads 1761 files so takes 1-2 mins per count_type
     '''
     target_path = '/scratch/chd5n/aneuploidy/hetsites-data/'
-    sufx = ['_cnts2R.tsv.gz', '_normal_hetcnts.bed.gz', '_tumor_hetcnts.bed.gz']
+    sufx = ['_hetcnts.tsv.gz', '_normal_hetcnts.bed.gz', '_tumor_hetcnts.bed.gz']
     l = glob(''.join([target_path, '*', sufx[0]]))
     l_subs = [i[len(target_path):len(i)-len(sufx[0])] for i in l]
     d = {}
@@ -33,7 +33,7 @@ def count_data(count_type):
         d[i] = {'bed_norm': -1, 'bed_tumor': -1, 'tsv_norm': -1, 'tsv_tumor': -1}
         for s in sufx:
             target = ''.join([target_path, i, s])
-            if s == '_cnts2R.tsv.gz':
+            if s == '_hetcnts.tsv.gz':
                 header = True
                 l_norm = []
                 l_tumor = []
@@ -57,7 +57,7 @@ def count_data(count_type):
                             l_tumor.append(data['chrom'])
                     else:
                         l.append(data['chr'])
-            if s == '_cnts2R.tsv.gz':
+            if s == '_hetcnts.tsv.gz':
                 d[i]['tsv_norm'] = extract_value(l_norm, count_type)
                 d[i]['tsv_tumor'] = extract_value(l_tumor, count_type)
             elif s == '_normal_hetcnts.bed.gz':
