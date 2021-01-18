@@ -13,20 +13,24 @@ library(reshape2)
 
 
 theme_default <- theme(
-    panel.border=element_rect(colour='black', size=1.0),
-    panel.grid.major=element_line(
-        colour='darkgrey', size=0.4, linetype='dashed'
-    ),
-    plot.title=element_text(face='plain', hjust=0),
-    axis.text.x=element_text(size=10, angle=45, vjust=1, hjust=0.8),
-    axis.text.y=element_text(size=10),
-    legend.position=c(0.025, 0.92),
+    panel.background=element_rect(fill="white"),
+    panel.border=element_rect(colour='black', size=1.0, fill=NA),
+    panel.grid.major=element_line(colour='grey', size=0.4, linetype='dashed'),
+    panel.grid.minor=element_line(colour="grey", size=0.2, linetype="dashed"),
+    axis.title.x=element_text(size=10),
+    axis.title.y=element_text(size=10),
+    axis.text.x=element_text(size=9, angle=45, vjust=1, hjust=0.8),
+    axis.text.y=element_text(size=9),
+    legend.position=c(0.025, 0.95),
     legend.key=element_blank(),
-    legend.background=element_rect(
-        fill='white', color='black', linetype='solid', size=0.4
-    ),
+    legend.key.size=unit(0.5, "cm"),
+    legend.key.width=unit(0.5, "cm"),
+    legend.spacing.x=unit(0.001, "cm"),
+    legend.spacing.y=unit(0.001, "cm"),
     legend.justification=c(0, 1),
-    legend.title=element_blank()
+    legend.title=element_blank(),
+    strip.background=element_rect(fill="black"),
+    strip.text=element_text(colour="white")
 )
 
 
@@ -116,20 +120,28 @@ set_colors <- function() {
 plot_density <- function(data, ttype_colors) {
     ggp <- ggplot(data, aes(x=maj_fract, color=t_type)) +
         stat_density(geom='line', position='identity') +
-        theme_set(theme_linedraw(base_size=10)) +
         theme_default +
+        theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
         ttype_colors +
         scale_x_continuous(
-            "Allele Fraction",
+            "Major Allele Fraction",
             limits=c(0.0, 1.0),
             breaks=seq(0.0, 1.0, 0.25)
-        )
+        ) +
+        ylab("Density")
     return(ggp)
 }
 
 
 plot_fractions <- function(data, ttype_colors, chrom_pos) {
     ## karyotype-esque plot
+    strip_labs <- c(
+        paste(unique(data$subject_id), "Normal",
+            format(length(unique(data$pos_abs)), big.mark=","), "sites"),
+        paste(unique(data$subject_id), "Tumor",
+            format(length(unique(data$pos_abs)), big.mark=","), "sites")
+    )
+    names(strip_labs) <- levels(data$t_type)
     x_min <- 0
     x_max <- sum(
         unlist(chrom_pos[chrom_pos$chrom == "chrY", 'len'], use.names=FALSE),
@@ -137,20 +149,22 @@ plot_fractions <- function(data, ttype_colors, chrom_pos) {
     )
     x_ticks <- chrom_pos$chrom
     ggp <- ggplot(data, aes(x=pos_abs, y=allele_fract, color=t_type)) +
-        geom_point(size=0.1) +
+        geom_point(size=0.1, alpha=0.25) +
         geom_vline(
             xintercept=c(chrom_pos$abs_pos0, x_max), linetype='dashed'
         ) +
-        facet_wrap(~t_type, ncol=1) +
-        theme_set(theme_linedraw(base_size=10)) +
+        facet_wrap(
+            ~t_type, ncol=1,
+            labeller=labeller(t_type=strip_labs, .multi_line=FALSE)
+        ) +
         theme_default +
-        theme(legend.position=NULL) +
+        theme(legend.position="none") +
         ttype_colors +
         scale_x_continuous(
             "Chromosome", breaks=chrom_pos$abs_pos0, labels=x_ticks,
             limits=c(x_min, x_max), expand=expansion(add=c(0.01, 0.01))
         ) +
-        ylab("Fraction Homozygous")
+        ylab("Allele Fraction")
     return(ggp)
 }
 
@@ -158,8 +172,10 @@ plot_fractions <- function(data, ttype_colors, chrom_pos) {
 write_plot <- function(subject_id, ggp1, ggp2) {
     target_dir <- "/scratch/chd5n/aneuploidy/plots/"
     target <- paste0(target_dir, subject_id, "_hetcnts.pdf")
-    pdf(target, width=7, height=4)
-    print(cowplot::plot_grid(ggp1, ggp2, ncol=2, rel_widths=c(0.33, 0.66)))
+    pdf(target, width=8, height=4)
+    print(cowplot::plot_grid(
+        ggp1, ggp2, ncol=2, rel_widths=c(0.33, 0.66), scale=c(0.95, 1)
+    ))
     dev.off()
     cat("plot written to", target, "\n")
 }

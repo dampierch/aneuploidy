@@ -134,6 +134,20 @@ rule make_density_plots:
         'python {input.plotter} --in_file {input.file_set} --set_num {set_num} --datetime {dt}'
 
 
+rule plot_hetcnts:
+    ## this rule fixes some problems with former density plots
+    ## approx 13 min on front end
+    input:
+        R = 'plot_hetcnts.R'
+    output:
+        end = '/scratch/chd5n/aneuploidy/plots/TCGA-WS-AB45_hetcnts.pdf'
+    shell:
+        '''
+        module load gcc/7.1.0 openmpi/3.1.4 R/4.0.0
+        Rscript {input.R} > plot_hetcnts_{dt}.log 2>&1
+        '''
+
+
 rule store_hetsite_data:
     input:
         store = 'store_hetsite_data.py',
