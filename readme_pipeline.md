@@ -295,6 +295,9 @@ start_paired_hets.py hall_tcga_t61.file_set
 * *Modified to use more intuitive loop over pileupcolumns and to include a semi-arbitrary, reasonable, mildly conservative coverage threshold*
 4. Read counts are prepared for analysis (i.e. converted to allele fractions) with [hetcnts_2R.py](scripts/hetcnts_2R.py)
 * *Modified slightly with `get_hetcnts_list` function*
+5. Due to bug in [hetcnts_2R.py](scripts/hetcnts_2R.py), many samples had missing chromosomes; bug fixed and code simplified in [parse_hetcnts.py](scripts/parse_hetcnts.py)
+6. Parser now assigns absolute genomic position to each site, filters out sites not included in both tumor and normal samples, sorts sites by absolute position to avoid chrom numbering issue, and intercalates sites with normal count listed before tumor for each site
+7. Comparison of results before and after [parse_hetcnts.py](scripts/parse_hetcnts.py) is performed by [sum_sites.py](scripts/sum_sites.py) and [sum_sites.R](scripts/sum_sites.R)
 * *Implementation Note: remember to make scripts executable with `#!/usr/bin/env python3` at top and `chmod +x` at Unix command line*
 
 #### Choice of coverage threshold
@@ -350,11 +353,26 @@ grep 'tumor missing' *_R_missing.err | wc -l
 6. We see a cluster of samples in the tumor TSV (i.e. Rdata) filtered set of sites with site counts between 5000 and 8000 and about 10 chromosomes included
 7. We cannot fix the Gapfiller_7m outliers; we should exclude them
 8. We can fix the missing chromosome problem, and we expect this cluster to disappear after fixing the problem with the sorting, intercalating, and filtering script (i.e. hetcnts_2R)
+9. As expected, the missing chrom cluster vanishes after implementing new parser (i.e. parse_hetcnts.py)
+
+## Visualize variant allele fractions
+
+To represent aneuploidy of genomic regions in tumor samples, we plotted allele fractions in multiple ways. First, we plotted the density of sites with allele fractions between 0 and 1 for normal and tumor samples. Second, we plotted allele fractions at each genomic position tested in normal and tumor samples.
+
+### Original WRP solution
+1. For genomic positions, use `hg38.chr1-XY.sizes_cumm` file with cumulative chromosome lengths
+2. Make a two panel figure: right panel density (or histogram) and left panel karyotype-style scatter plot
+
+```
+Rscript --vanilla plot_haplo_gg_chrom2.R $n
+```
+
+### CHD solution
+1. For first try see [run_plotter.py](scripts/run_plotter.py) and [plot_haplo_chrom.R](scripts/plot_haplo_chrom.R)
+2. Improved version: [plot_hetcnts.R](scripts/plot_hetcnts.R)
 
 ## HMM classifier
 * *Under construction* [fit_hmm.py](scripts/fit_hmm.py)
 
 ## TO DO
-* Fix [hetcnts_2R.py](scripts/hetcnts_2R.py) to make 'phasing' more sensible
-* Fix [plot_haplo_chrom.R](scripts/plot_haplo_chrom.R) to simplify syntax
 * Finish [fit_hmm.py](scripts/fit_hmm.py)

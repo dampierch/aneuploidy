@@ -11,41 +11,27 @@ An investigation into the drivers of chromosomal instability (CIN) in colorectal
 * DGE using MSS samples, most vs least aneuploid
 
 ## Analysis v0.2
-* add normal SD curve to aneuploid rank plot to help with interpretation - DONE
+* Add normal SD curve to aneuploid rank plot to help with interpretation - DONE
 * VAAST is proprietary - ABANDON - NEED TO FIND ALTERNATIVE
-* gene expression correlations with MSS and MSI-L - DONE
-* share het-sites directory with Pankaj - DONE
-  1. `/scratch/chd5n/aneuploidy/`
-  2. `/scratch/chd5n/aneuploidy/hetsites-data/r-cnts/`
+* Gene expression correlations with MSS and MSI-L - DONE
+* Share het-sites directory with Pankaj - DONE
+1. `/scratch/chd5n/aneuploidy/`
+2. `/scratch/chd5n/aneuploidy/hetsites-data/r-cnts/`
 
 ## Analysis v0.3
-* classify chromosome arms using 3 state HMM
-* find patterns
+* Classify chromosome arms using 3 state HMM
+* Find patterns
 
-### wrp::plots
-* these scripts require an 'hg38.chr1-XY.sizes_cumm' file with cumulative chromosome lengths
-* `Rscript --vanilla plot_haplo_gg_chrom2.R $n` -- plot two panel histogram (density) and one-panel chromosome plot  -- try this first
-* `plot_karyo_gg_list.R`   -- plot using a file with a list of TCGA id's, makes karyoploteR plot
-* `plot_karyo_gg.R`        -- plot an individual TCGA id, makes karyoploteR plot
+## Implementation Notes
+* set 1 (with Snakefile)
+1. start 2019-11-20: download worked, 20 in 2 hours >> fe
+2. assemble_files worked (3-4sec) >> fe
+3. call_variants worked (1h 40m) >> sbatch
+4. count_hetsites worked (50m) >> sbatch
+5. make_density_plots worked after bug fix (9-12sec) >> fe
+6. store_hetsite_data working after bug fix (20sec) >> fe
 
-#### CHD::plots
-* plot_haplo_gg_chrom2r.R :: see [run_plotter.py](scripts/run_plotter.py) and [plot_haplo_chrom.R](scripts/plot_haplo_chrom.R)
-* karyoploteR...
-
-### smallest file in test set
-/scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/TCGA-AF-3400-01A-01D-1989-10_gapfillers_Illumina_gdc_realn.bam
-
-### snakemake pipeline
-* should be ready to go: [Snakefile](scripts/Snakefile)...
-* trying set 1
-  1. start 2019-11-20: download worked, 20 in 2 hours >> fe
-  2. assemble_files worked (3-4sec) >> fe
-  3. call_variants worked (1h 40m) >> sbatch
-  4. count_hetsites worked (50m) >> sbatch
-  5. make_density_plots worked after bug fix (9-12sec) >> fe
-  6. store_hetsite_data working after bug fix (20sec) >> fe
-
-### sets processed
+### Sets Processed
 
 | set | download | assemble | variants | hetsites | plots | store | LOH | trouble |
 | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: |
@@ -66,16 +52,28 @@ An investigation into the drivers of chromosomal instability (CIN) in colorectal
 | 11v2 | x | x | x | x | x | x |  |  |
 | 12v2 | x | x | x | x | x | x |  |  |
 
-Total: 587 pairs (1174 WXS files) processed
+* Total: 587 pairs (1174 WXS files) processed
+* Smallest file in test set:
+
+```
+/scratch/chd5n/aneuploidy/raw-data/sequencing/crunch/TCGA-AF-3400-01A-01D-1989-10_gapfillers_Illumina_gdc_realn.bam
+```
 
 ## Background
+
+### Tumor Biology
 * Pfister et al., 2018: [Identification of Drivers of Aneuploidy in Breast Tumors](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5997284/)
 1. Ried et al. (review), 2019: [The landscape of genomic copy number alterations in colorectal cancer and their consequences on gene expression levels and disease outcome](https://www.sciencedirect.com/science/article/pii/S0098299719300354)
 2. Taylor et al., 2018: [Genomic and Functional Approaches to Understanding Cancer Aneuploidy](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6028190/)
 3. Sansregret & Swanton (review), 2017: [The Role of Aneuploidy in Cancer Evolution](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5204330/)
 4. Andor et al., 2016: [Pan-cancer analysis of the extent and consequences of intra-tumor heterogeneity](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4830693/)
+5. Zack et al., 2013 [Pan-cancer patterns of somatic copy-number alteration](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3966983/)
 
-## early thoughts
+### Technical Considerations
+1. Soong et al., 2020: [CNV Radar: an improved method for somatic copy number alteration characterization in oncology](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7060549/)
+2. Xing Lecture: [Introduction to array CGH analysis](https://www.cs.cmu.edu/~epxing/Class/10810-05/Lecture11.pdf)
+
+## Early Thoughts
 
 ### Sample selection
 1. From the [GDC data portal](https://portal.gdc.cancer.gov/), we select all colon, rectosigmoid, and rectum samples from TCGA-COAD and TCGA-READ without a filter for tumor type (i.e. we do not care whether the diagnosis was adenocarcinoma or cystic neoplasm).
