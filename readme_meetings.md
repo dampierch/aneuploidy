@@ -1,5 +1,14 @@
 # Aneuploidy Working Group Meetings
 
+## 2021-01-15
+* [ ] get cms classifications for tcga samples
+* at least one group has generated them for this [manuscript](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6221003/)
+* [ ] show rank by aneuploidy and frequency of gene mutations
+* [ ] show kaplan meier curves for most vs least aneuploidy tumors
+* exclude msi-h from analysis
+* focus on chrom 18
+* look at SMAD4 mutations and other mutations enriched on chrom 18
+
 ## 2020-12-17
 * done with CRC classification wherein tumors scored by aneuploidy
 * goal: find pattern among chromosome specific segments (chrom arms p and q)
