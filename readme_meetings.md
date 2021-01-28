@@ -1,6 +1,6 @@
 # Aneuploidy Working Group Meetings
 
-## 2021-01-15
+## 2021-01-22
 * [ ] get cms classifications for tcga samples
 * at least one group has generated them for this [manuscript](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6221003/)
 * [ ] show rank by aneuploidy and frequency of gene mutations
@@ -8,6 +8,11 @@
 * exclude msi-h from analysis
 * focus on chrom 18
 * look at SMAD4 mutations and other mutations enriched on chrom 18
+
+## 2021-01-15
+* distinguish low counts from exome capture kit vs chrom order
+* fix code to address chrom order
+* finish hmm
 
 ## 2020-12-17
 * done with CRC classification wherein tumors scored by aneuploidy
